@@ -40,11 +40,12 @@ if (isDeployedEnvironment) {
     const password = url.password;
     const database = url.pathname.substring(1); // Remove leading slash
     
-    // For Supabase, use the original hostname with pooler port for better compatibility
+    // For Supabase, use regional pooler endpoint to bypass DNS resolution issues
     if (host.includes('supabase.co')) {
-      // Use IPv4-only pooler connection with original Supabase hostname
-      connectionString = `postgresql://${username}:${password}@${host}:6543/${database}?sslmode=require`;
-      console.log('🔗 Using Supabase pooler with IPv4 DNS preference');
+      // Use regional pooler endpoint which has better IPv4 support
+      const supabaseProject = host.split('.')[0].replace('db.', '');
+      connectionString = `postgresql://${username}:${password}@aws-0-us-east-1.pooler.supabase.com:6543/${database}?sslmode=require&host=${supabaseProject}`;
+      console.log(`🔗 Using Supabase regional pooler (project: ${supabaseProject})`);
     } else {
       // Use IPv4-only pooler connection for other deployments
       connectionString = `postgresql://${username}:${password}@${host}:6543/${database}?sslmode=require`;
