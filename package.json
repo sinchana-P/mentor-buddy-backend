@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "echo 'Build complete'",
-    "start": "tsx src/index.ts",
+    "start": "npx tsx src/index.ts",
     "dev:watch": "nodemon --exec tsx src/index.ts",
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
