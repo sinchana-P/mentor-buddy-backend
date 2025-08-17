@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { storage } from '../lib/storage.ts';
-import { insertUserSchema } from '../shared/schema.ts';
+import { insertUserSchema, type InsertUser } from '../shared/schema.ts';
 
 // Validation schemas
 const updateUserSchema = insertUserSchema.partial();
@@ -59,8 +59,15 @@ export const createUser = async (req: Request, res: Response) => {
   try {
     console.log('[POST /api/users] Creating user with data:', req.body);
     
-    // Validate request body with Zod
-    const userData = insertUserSchema.parse(req.body);
+    // Validate request body with Zod and cast to proper type
+    const validatedData = insertUserSchema.parse(req.body);
+    const userData: InsertUser = {
+      email: validatedData.email,
+      name: validatedData.name,
+      role: validatedData.role,
+      domainRole: validatedData.domainRole,
+      avatarUrl: validatedData.avatarUrl
+    };
     
     const user = await storage.createUser(userData);
     console.log('[POST /api/users] User created successfully:', user);

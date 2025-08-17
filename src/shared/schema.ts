@@ -101,7 +101,7 @@ export const resources = pgTable('resources', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-// Insert schemas
+// Insert schemas using Zod validation
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -148,22 +148,22 @@ export const insertCurriculumSchema = createInsertSchema(curriculum).omit({
   updatedAt: true,
 });
 
-// Types
+// Types - Use Drizzle's built-in type inference for Insert types
 export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertUser = typeof users.$inferInsert;
 export type Mentor = typeof mentors.$inferSelect;
-export type InsertMentor = z.infer<typeof insertMentorSchema>;
+export type InsertMentor = typeof mentors.$inferInsert;
 export type Buddy = typeof buddies.$inferSelect;
-export type InsertBuddy = z.infer<typeof insertBuddySchema>;
+export type InsertBuddy = typeof buddies.$inferInsert;
 export type Task = typeof tasks.$inferSelect;
-export type InsertTask = z.infer<typeof insertTaskSchema>;
+export type InsertTask = typeof tasks.$inferInsert;
 export type Submission = typeof submissions.$inferSelect;
-export type InsertSubmission = z.infer<typeof insertSubmissionSchema>;
+export type InsertSubmission = typeof submissions.$inferInsert;
 export type Topic = typeof topics.$inferSelect;
-export type InsertTopic = z.infer<typeof insertTopicSchema>;
+export type InsertTopic = typeof topics.$inferInsert;
 export type BuddyTopicProgress = typeof buddyTopicProgress.$inferSelect;
-export type InsertBuddyTopicProgress = z.infer<typeof insertBuddyTopicProgressSchema>;
+export type InsertBuddyTopicProgress = typeof buddyTopicProgress.$inferInsert;
 export type Resource = typeof resources.$inferSelect;
-export type InsertResource = z.infer<typeof insertResourceSchema>;
+export type InsertResource = typeof resources.$inferInsert;
 export type Curriculum = typeof curriculum.$inferSelect;
-export type InsertCurriculum = z.infer<typeof insertCurriculumSchema>;
+export type InsertCurriculum = typeof curriculum.$inferInsert;
