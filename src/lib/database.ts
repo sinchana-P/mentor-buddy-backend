@@ -19,7 +19,7 @@ export const client = postgres(connectionString, {
   prepare: false,
   max: 1, // Reduce connection pool size
   ssl: 'require', // Always require SSL for Supabase connections
-  connect_timeout: 60, // Increase timeout
+  connect_timeout: 30, // Reduce timeout to 30 seconds
   idle_timeout: 0, // Disable idle timeout
   max_lifetime: 0, // Disable max lifetime
   fetch_types: false, // Disable type fetching for performance

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { storage } from '../lib/storage.ts';
-import { insertTaskSchema, insertSubmissionSchema } from '../shared/schema.ts';
+import { insertTaskSchema, insertSubmissionSchema, type InsertTask, type InsertSubmission } from '../shared/schema.ts';
 
 // Validation schemas
 const createTaskSchema = insertTaskSchema.extend({
@@ -90,12 +90,16 @@ export const createTask = async (req: Request, res: Response) => {
     // Validate request body with Zod
     const taskData = createTaskSchema.parse(req.body);
     
-    // Convert dueDate if it's a string - ensure proper type casting
-    const processedTaskData = {
-      ...taskData,
+    // Convert dueDate if it's a string and prepare InsertTask data
+    const processedTaskData: InsertTask = {
+      title: taskData.title,
+      description: taskData.description,
+      mentorId: taskData.mentorId,
+      buddyId: taskData.buddyId,
+      status: taskData.status || 'pending',
       dueDate: taskData.dueDate && typeof taskData.dueDate === 'string' 
         ? new Date(taskData.dueDate) 
-        : (taskData.dueDate as Date | null | undefined)
+        : (taskData.dueDate as Date | undefined)
     };
     
     const task = await storage.createTask(processedTaskData);
@@ -196,7 +200,16 @@ export const createSubmission = async (req: Request, res: Response) => {
     // Validate request body with Zod
     const submissionData = createSubmissionSchema.parse(req.body);
     
-    const submission = await storage.createSubmission(submissionData);
+    // Prepare InsertSubmission data
+    const processedSubmissionData: InsertSubmission = {
+      buddyId: submissionData.buddyId,
+      taskId: submissionData.taskId,
+      githubLink: submissionData.githubLink,
+      deployedUrl: submissionData.deployedUrl,
+      notes: submissionData.notes
+    };
+    
+    const submission = await storage.createSubmission(processedSubmissionData);
     console.log('[POST /api/submissions] Submission created successfully:', submission);
     res.status(201).json(submission);
   } catch (error) {

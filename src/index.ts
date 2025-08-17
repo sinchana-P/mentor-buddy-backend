@@ -196,22 +196,58 @@ app.delete("/api/topics/:id", topicController.deleteTopic);
 // Dashboard routes
 app.get("/api/dashboard/stats", async (req, res) => {
   try {
-    const { storage } = await import("./lib/storage.ts");
-    const stats = await storage.getDashboardStats();
-    res.json(stats);
+    console.log('[GET /api/dashboard/stats] Fetching dashboard statistics...');
+    
+    // For now, return mock data while database setup is in progress
+    const mockStats = {
+      totalMentors: 8,
+      totalBuddies: 24,
+      activeTasks: 12,
+      completedTasks: 45,
+      completionRate: 79
+    };
+    
+    console.log('[GET /api/dashboard/stats] Returning mock stats:', mockStats);
+    res.json(mockStats);
   } catch (error) {
-    console.error('Dashboard stats error:', error);
+    console.error('[GET /api/dashboard/stats] Error:', error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
 app.get("/api/dashboard/activity", async (req, res) => {
   try {
-    const { storage } = await import("./lib/storage.ts");
-    const activity = await storage.getRecentActivity();
-    res.json(activity);
+    console.log('[GET /api/dashboard/activity] Fetching recent activity...');
+    
+    // For now, return mock data while database setup is in progress
+    const mockActivity = [
+      {
+        id: '1',
+        type: 'task_assigned',
+        message: 'John Doe assigned "React Components" to Sarah Wilson',
+        timestamp: new Date().toISOString(),
+        status: 'in_progress'
+      },
+      {
+        id: '2',
+        type: 'task_completed',
+        message: 'Mike Johnson completed "Node.js API Development"',
+        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        status: 'completed'
+      },
+      {
+        id: '3',
+        type: 'buddy_assigned',
+        message: 'Emma Davis was assigned to mentor Alice Cooper',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+        status: 'active'
+      }
+    ];
+    
+    console.log('[GET /api/dashboard/activity] Returning mock activity:', mockActivity.length, 'items');
+    res.json(mockActivity);
   } catch (error) {
-    console.error('Dashboard activity error:', error);
+    console.error('[GET /api/dashboard/activity] Error:', error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
