@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: mentor-buddy-backend
+    env: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: postgresql://postgres:SinchanaPGudagi@db.fbxmsxjbrffgejwgskeg.supabase.co:5432/postgres
+      - key: SUPABASE_URL
+        value: https://fbxmsxjbrffgejwgskeg.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZieG1zeGpicmZmZ2Vqd2dza2VnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0OTM1NTMsImV4cCI6MjA2OTA2OTU1M30.o9yQ-9YlNuEHwLBokKodHkB2GFR8NbUkRtGzDfEWOik
+      - key: CORS_ORIGIN
+        value: https://mentor-buddy.vercel.app,https://mentor-buddy-panel.vercel.app
