@@ -2,6 +2,7 @@
 export const config = {
   // Database Configuration
   DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/mentor_buddy',
+  DATABASE_POOLER_URL: process.env.DATABASE_POOLER_URL, // Optional pooler URL for production
   
   // Supabase Configuration
   SUPABASE_URL: process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
@@ -20,7 +21,7 @@ export const config = {
   CORS_ORIGIN: process.env.CORS_ORIGIN || (
     process.env.NODE_ENV === 'production' 
       ? ['https://mentor-buddy-panel.vercel.app', 'https://mentor-buddy-ui.vercel.app']
-      : ['http://localhost:5173', 'http://localhost:3000']
+      : ['http://localhost:5173', 'http://localhost:3000', 'https://mentor-buddy.vercel.app/']
   ),
   
   // API Configuration
