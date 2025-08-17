@@ -175,4 +175,4 @@ app.listen(port, "0.0.0.0", () => {
   console.log(`✅ Server is running on port ${port}`);
   console.log(`🔗 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 CORS Origins: ${JSON.stringify(allowedOrigins)}`);
-});
+});console.log('🚀 Starting Mentor Buddy Backend...');
