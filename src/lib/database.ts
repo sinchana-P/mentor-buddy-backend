@@ -17,14 +17,12 @@ console.log('🔗 Connecting to database:', connectionString);
 // Create postgres client with SSL configuration for Supabase
 export const client = postgres(connectionString, {
   prepare: false,
-  max: 10,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  connection: {
-    application_name: 'mentor-buddy-backend',
-  },
-  connect_timeout: 30, // 30 second timeout
-  idle_timeout: 20,
-  max_lifetime: 60 * 30, // 30 minutes
+  max: 1, // Reduce connection pool size for Render
+  ssl: process.env.NODE_ENV === 'production' ? 'require' : false, // Force SSL requirement
+  connect_timeout: 60, // Increase timeout
+  idle_timeout: 0, // Disable idle timeout
+  max_lifetime: 0, // Disable max lifetime
+  fetch_types: false, // Disable type fetching for performance
 });
 
 // Create drizzle instance
