@@ -3,6 +3,13 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { config } from '../config/index.js';
 import * as schema from '../shared/schema.js';
+import { setDefaultResultOrder } from 'dns';
+
+// Force IPv4 DNS resolution to avoid IPv6 connectivity issues on Render
+if (process.env.NODE_ENV === 'production') {
+  setDefaultResultOrder('ipv4first');
+  console.log('🔗 Set DNS to prefer IPv4 for Render compatibility');
+}
 
 // Database connection
 let connectionString = config.DATABASE_URL;
@@ -10,6 +17,7 @@ let connectionString = config.DATABASE_URL;
 if (!connectionString) {
   throw new Error('DATABASE_URL environment variable is not set');
 }
+
 
 // Parse connection URL for debugging
 console.log('🔗 Connecting to database:', connectionString);
