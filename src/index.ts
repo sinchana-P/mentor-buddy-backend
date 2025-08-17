@@ -8,7 +8,7 @@ dotenv.config();
 const app = express();
 
 // CORS Configuration for production deployment
-const allowedOrigins = [
+const defaultAllowedOrigins = [
   'https://mentor-buddy.vercel.app',
   'https://mentor-buddy-panel.vercel.app',
   'https://mentor-buddy-panel-123.vercel.app',
@@ -18,8 +18,20 @@ const allowedOrigins = [
   'http://localhost:3000'
 ];
 
+// Parse CORS_ORIGIN environment variable (can be comma-separated string or array)
+const getCorsOrigins = () => {
+  if (process.env.CORS_ORIGIN) {
+    return typeof process.env.CORS_ORIGIN === 'string' 
+      ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+      : process.env.CORS_ORIGIN;
+  }
+  return process.env.NODE_ENV === 'production' ? defaultAllowedOrigins : true;
+};
+
+const corsOrigins = getCorsOrigins();
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? allowedOrigins : true,
+  origin: corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -219,5 +231,5 @@ const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 app.listen(port, "0.0.0.0", () => {
   console.log(`✅ Server is running on port ${port}`);
   console.log(`🔗 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 CORS Origins: ${JSON.stringify(allowedOrigins)}`);
+  console.log(`🌐 CORS Origins: ${JSON.stringify(corsOrigins)}`);
 });
