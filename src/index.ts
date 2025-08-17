@@ -9,6 +9,7 @@ const app = express();
 
 // CORS Configuration for production deployment
 const allowedOrigins = [
+  'https://mentor-buddy.vercel.app',
   'https://mentor-buddy-panel.vercel.app',
   'https://mentor-buddy-panel-123.vercel.app',
   'http://localhost:5173',
