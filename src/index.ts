@@ -170,10 +170,30 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error(`Error: ${status} - ${message}`);
 });
 
-// Start server
-const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-app.listen(port, "0.0.0.0", () => {
-  console.log(`✅ Server is running on port ${port}`);
-  console.log(`🔗 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 CORS Origins: ${JSON.stringify(allowedOrigins)}`);
-});console.log('🚀 Starting Mentor Buddy Backend...');
+// Test database connection on startup
+async function startServer() {
+  try {
+    console.log('🚀 Starting Mentor Buddy Backend...');
+    
+    // Test database connection
+    const { testConnection } = await import("./lib/database.js");
+    const connected = await testConnection();
+    
+    if (!connected) {
+      console.warn('⚠️ Database connection failed, but server will start anyway');
+    }
+    
+    // Start server
+    const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+    app.listen(port, "0.0.0.0", () => {
+      console.log(`✅ Server is running on port ${port}`);
+      console.log(`🔗 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🌐 CORS Origins: ${JSON.stringify(allowedOrigins)}`);
+    });
+  } catch (error) {
+    console.error('❌ Server startup failed:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
