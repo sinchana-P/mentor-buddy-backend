@@ -53,6 +53,48 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Debug endpoint to test database connection
+app.get("/api/debug/db", async (req, res) => {
+  try {
+    console.log('Debug: Testing database connection...');
+    const { testConnection } = await import("./lib/database.js");
+    const connected = await testConnection();
+    res.json({ 
+      dbConnected: connected,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      databaseUrl: process.env.DATABASE_URL ? 'SET' : 'NOT_SET'
+    });
+  } catch (error) {
+    console.error('Debug: Database test failed:', error);
+    res.status(500).json({ 
+      error: error.message,
+      stack: error.stack,
+      dbConnected: false 
+    });
+  }
+});
+
+// Debug endpoint to test storage import
+app.get("/api/debug/storage", async (req, res) => {
+  try {
+    console.log('Debug: Testing storage import...');
+    const { storage } = await import("./lib/storage.js");
+    res.json({ 
+      storageImported: true,
+      storageType: typeof storage,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Debug: Storage import failed:', error);
+    res.status(500).json({ 
+      error: error.message,
+      stack: error.stack,
+      storageImported: false 
+    });
+  }
+});
+
 // Root endpoint
 app.get("/", (req, res) => {
   res.json({ 
