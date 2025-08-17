@@ -44,9 +44,9 @@ if (isDeployedEnvironment) {
     if (host.includes('supabase.co')) {
       // Extract the project reference from the original hostname
       const supabaseProject = host.split('.')[0].replace('db.', '');
-      // Use the project-specific pooler hostname with IPv4 preference
-      connectionString = `postgresql://${username}:${password}@${supabaseProject}.pooler.supabase.com:6543/${database}?sslmode=require`;
-      console.log(`🔗 Using Supabase project pooler (project: ${supabaseProject})`);
+      // Use the correct Supabase pooler format: postgres.{project}@aws-0-ap-southeast-1.pooler.supabase.com
+      connectionString = `postgresql://postgres.${supabaseProject}:${password}@aws-0-ap-southeast-1.pooler.supabase.com:6543/${database}?sslmode=require`;
+      console.log(`🔗 Using Supabase AP Southeast pooler (project: ${supabaseProject})`);
     } else {
       // Use IPv4-only pooler connection for other deployments
       connectionString = `postgresql://${username}:${password}@${host}:6543/${database}?sslmode=require`;
