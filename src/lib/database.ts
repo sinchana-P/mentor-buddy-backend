@@ -1,6 +1,7 @@
 import 'dotenv/config'; // Load environment variables first
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { setDefaultResultOrder } from 'dns';
 import { config } from '../config/index.js';
 import * as schema from '../shared/schema.js';
 
@@ -15,14 +16,17 @@ if (!connectionString) {
 // Check multiple conditions that indicate we're in a deployed environment
 const isDeployedEnvironment = process.env.NODE_ENV === 'production' || 
                               process.env.RENDER || 
-                              process.env.PORT === '10000' ||
-                              connectionString.includes('supabase.co');
+                              process.env.PORT === '10000';
 
 if (isDeployedEnvironment) {
   console.log('🔗 Detected deployed environment, applying IPv4 pooler fix');
   console.log('🔗 NODE_ENV:', process.env.NODE_ENV);
   console.log('🔗 RENDER:', process.env.RENDER);
   console.log('🔗 PORT:', process.env.PORT);
+  
+  // Force IPv4 DNS resolution to avoid IPv6 connectivity issues
+  setDefaultResultOrder('ipv4first');
+  console.log('🔗 Set DNS to prefer IPv4 for deployment compatibility');
   
   // Use explicit pooler URL if provided, otherwise construct it
   if (config.DATABASE_POOLER_URL) {
@@ -36,9 +40,16 @@ if (isDeployedEnvironment) {
     const password = url.password;
     const database = url.pathname.substring(1); // Remove leading slash
     
-    // Use IPv4-only pooler connection for deployment compatibility
-    connectionString = `postgresql://${username}:${password}@${host}:6543/${database}?pgbouncer=true&sslmode=require`;
-    console.log('🔗 Converted to Supabase IPv4 pooler connection');
+    // For Supabase, use the original hostname with pooler port for better compatibility
+    if (host.includes('supabase.co')) {
+      // Use IPv4-only pooler connection with original Supabase hostname
+      connectionString = `postgresql://${username}:${password}@${host}:6543/${database}?sslmode=require`;
+      console.log('🔗 Using Supabase pooler with IPv4 DNS preference');
+    } else {
+      // Use IPv4-only pooler connection for other deployments
+      connectionString = `postgresql://${username}:${password}@${host}:6543/${database}?sslmode=require`;
+      console.log('🔗 Converted to IPv4 pooler connection');
+    }
   }
   console.log('🔗 Final connection string:', connectionString.replace(/:[^:@]*@/, ':***@'));
 }
@@ -63,6 +74,8 @@ export const client = postgres(connectionString, {
   ...(isDeployedEnvironment && {
     publications: 'supabase_realtime',
     onnotice: () => {}, // Suppress notices
+    // Additional network settings for IPv4 compatibility
+    target_session_attrs: 'read-write',
   }),
 });
 
