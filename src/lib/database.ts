@@ -42,10 +42,11 @@ if (isDeployedEnvironment) {
     
     // For Supabase, use regional pooler endpoint to bypass DNS resolution issues
     if (host.includes('supabase.co')) {
-      // Use regional pooler endpoint which has better IPv4 support
+      // Extract the project reference from the original hostname
       const supabaseProject = host.split('.')[0].replace('db.', '');
-      connectionString = `postgresql://${username}:${password}@aws-0-us-east-1.pooler.supabase.com:6543/${database}?sslmode=require&host=${supabaseProject}`;
-      console.log(`🔗 Using Supabase regional pooler (project: ${supabaseProject})`);
+      // Use the project-specific pooler hostname with IPv4 preference
+      connectionString = `postgresql://${username}:${password}@${supabaseProject}.pooler.supabase.com:6543/${database}?sslmode=require`;
+      console.log(`🔗 Using Supabase project pooler (project: ${supabaseProject})`);
     } else {
       // Use IPv4-only pooler connection for other deployments
       connectionString = `postgresql://${username}:${password}@${host}:6543/${database}?sslmode=require`;
