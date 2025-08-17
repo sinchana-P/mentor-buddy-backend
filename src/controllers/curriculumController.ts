@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { storage } from '../lib/storage.js';
-import { insertCurriculumSchema, DomainRole } from '../shared/schema.js';
+import { storage } from '../lib/storage.ts';
+import { insertCurriculumSchema, DomainRole } from '../shared/schema.ts';
 
 // Validation schemas
 const createCurriculumSchema = insertCurriculumSchema.extend({

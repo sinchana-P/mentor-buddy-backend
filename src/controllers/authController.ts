@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { storage } from '../lib/storage.js';
-import { DomainRole } from '../shared/schema.js';
+import { storage } from '../lib/storage.ts';
+import { DomainRole } from '../shared/schema.ts';
 
 const loginSchema = z.object({
   email: z.string().email(),

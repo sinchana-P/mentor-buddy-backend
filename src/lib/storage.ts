@@ -1,6 +1,6 @@
 import { eq, and, like, desc, asc, sql, ilike, inArray } from 'drizzle-orm';
-import { db } from './database.js';
-import * as schema from '../shared/schema.js';
+import { db } from './database.ts';
+import * as schema from '../shared/schema.ts';
 import { 
   type User, 
   type InsertUser, 
@@ -21,7 +21,7 @@ import {
   type Resource,
   type InsertResource,
   type DomainRole
-} from '../shared/schema.js';
+} from '../shared/schema.ts';
 
 // Extended interface with all CRUD methods needed for the mentoring platform
 export interface IStorage {

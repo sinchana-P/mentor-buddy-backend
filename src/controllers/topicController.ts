@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { storage } from '../lib/storage.js';
-import { insertTopicSchema, DomainRole } from '../shared/schema.js';
+import { storage } from '../lib/storage.ts';
+import { insertTopicSchema, DomainRole } from '../shared/schema.ts';
 
 // Validation schemas
 const createTopicSchema = insertTopicSchema.extend({

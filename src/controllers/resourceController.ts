@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { storage } from '../lib/storage.js';
-import { insertResourceSchema } from '../shared/schema.js';
+import { storage } from '../lib/storage.ts';
+import { insertResourceSchema } from '../shared/schema.ts';
 
 // Validation schemas
 const createResourceSchema = insertResourceSchema.extend({

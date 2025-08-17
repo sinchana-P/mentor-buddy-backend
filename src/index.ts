@@ -69,7 +69,7 @@ app.get("/api/health", (req, res) => {
 app.get("/api/debug/db", async (req, res) => {
   try {
     console.log('Debug: Testing database connection...');
-    const { testConnection } = await import("./lib/database.js");
+    const { testConnection } = await import("./lib/database.ts");
     const connected = await testConnection();
     res.json({ 
       dbConnected: connected,
@@ -91,7 +91,7 @@ app.get("/api/debug/db", async (req, res) => {
 app.get("/api/debug/storage", async (req, res) => {
   try {
     console.log('Debug: Testing storage import...');
-    const { storage } = await import("./lib/storage.js");
+    const { storage } = await import("./lib/storage.ts");
     res.json({ 
       storageImported: true,
       storageType: typeof storage,
@@ -117,14 +117,14 @@ app.get("/", (req, res) => {
 });
 
 // Import API routes
-import * as authController from "./controllers/authController.js";
-import * as userController from "./controllers/userController.js";
-import * as mentorController from "./controllers/mentorController.js";
-import * as buddyController from "./controllers/buddyController.js";
-import * as taskController from "./controllers/taskController.js";
-import * as resourceController from "./controllers/resourceController.js";
-import * as curriculumController from "./controllers/curriculumController.js";
-import * as topicController from "./controllers/topicController.js";
+import * as authController from "./controllers/authController.ts";
+import * as userController from "./controllers/userController.ts";
+import * as mentorController from "./controllers/mentorController.ts";
+import * as buddyController from "./controllers/buddyController.ts";
+import * as taskController from "./controllers/taskController.ts";
+import * as resourceController from "./controllers/resourceController.ts";
+import * as curriculumController from "./controllers/curriculumController.ts";
+import * as topicController from "./controllers/topicController.ts";
 
 // Authentication routes
 app.post("/api/auth/login", authController.login);
@@ -196,7 +196,7 @@ app.delete("/api/topics/:id", topicController.deleteTopic);
 // Dashboard routes
 app.get("/api/dashboard/stats", async (req, res) => {
   try {
-    const { storage } = await import("./lib/storage.js");
+    const { storage } = await import("./lib/storage.ts");
     const stats = await storage.getDashboardStats();
     res.json(stats);
   } catch (error) {
@@ -207,7 +207,7 @@ app.get("/api/dashboard/stats", async (req, res) => {
 
 app.get("/api/dashboard/activity", async (req, res) => {
   try {
-    const { storage } = await import("./lib/storage.js");
+    const { storage } = await import("./lib/storage.ts");
     const activity = await storage.getRecentActivity();
     res.json(activity);
   } catch (error) {

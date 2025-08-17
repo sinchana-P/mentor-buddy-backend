@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { storage } from '../lib/storage.js';
-import { insertTaskSchema, insertSubmissionSchema } from '../shared/schema.js';
+import { storage } from '../lib/storage.ts';
+import { insertTaskSchema, insertSubmissionSchema } from '../shared/schema.ts';
 
 // Validation schemas
 const createTaskSchema = insertTaskSchema.extend({

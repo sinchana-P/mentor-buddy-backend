@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { storage } from '../lib/storage.js';
-import { insertMentorSchema, insertUserSchema, DomainRole } from '../shared/schema.js';
+import { storage } from '../lib/storage.ts';
+import { insertMentorSchema, insertUserSchema, DomainRole } from '../shared/schema.ts';
 
 // Validation schemas
 const createMentorSchema = z.object({
