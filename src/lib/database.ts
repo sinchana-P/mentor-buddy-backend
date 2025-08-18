@@ -13,27 +13,57 @@ if (!connectionString) {
 // Parse connection URL for debugging
 console.log('🔗 Connecting to database:', connectionString.replace(/:[^:@]*@/, ':***@'));
 
-// Create postgres client with optimized configuration for Supabase
-export const client = postgres(connectionString, {
-  prepare: false,
-  max: 1, // Single connection to avoid connection issues
-  ssl: { rejectUnauthorized: false }, // More permissive SSL for development
-  connect_timeout: 5, // Shorter connect timeout
-  idle_timeout: 20, // Shorter idle timeout
-  max_lifetime: 300, // 5 minute max lifetime
-  fetch_types: false, // Disable type fetching for performance
-  transform: {
-    undefined: null,
-  },
-  onnotice: () => {}, // Suppress notices
-  connection: {
-    application_name: 'mentor-buddy-backend'
-  },
-  debug: false // Disable debug output
+// Lazy database connection - only create when needed
+let _client: postgres.Sql | null = null;
+let _db: any | null = null;
+
+const createClient = () => {
+  if (!_client) {
+    console.log('🔄 Creating database client...');
+    _client = postgres(connectionString, {
+      prepare: false,
+      max: 2, // Allow 2 connections
+      ssl: { rejectUnauthorized: false },
+      connect_timeout: 10, // 10 second timeout
+      idle_timeout: 30, // 30 second idle timeout
+      max_lifetime: 600, // 10 minute max lifetime
+      fetch_types: false,
+      transform: {
+        undefined: null,
+      },
+      onnotice: () => {}, // Suppress notices
+      connection: {
+        application_name: 'mentor-buddy-backend'
+      },
+      debug: false
+    });
+  }
+  return _client;
+};
+
+const createDb = () => {
+  if (!_db) {
+    _db = drizzle(createClient(), { schema });
+  }
+  return _db;
+};
+
+// Export lazy getters
+export const getClient = () => createClient();
+export const getDb = () => createDb();
+
+// For backward compatibility, create getters that only initialize when accessed
+export const client = new Proxy({} as postgres.Sql, {
+  get(target, prop) {
+    return createClient()[prop as keyof postgres.Sql];
+  }
 });
 
-// Create drizzle instance
-export const db = drizzle(client, { schema });
+export const db = new Proxy({} as any, {
+  get(target, prop) {
+    return createDb()[prop];
+  }
+});
 
 // Test database connection
 export async function testConnection() {
@@ -45,7 +75,7 @@ export async function testConnection() {
       nodeEnv: process.env.NODE_ENV
     });
     
-    const result = await client`SELECT 1 as test`;
+    const result = await createClient()`SELECT 1 as test`;
     console.log('✅ Database connection successful, result:', result);
     return true;
   } catch (error) {

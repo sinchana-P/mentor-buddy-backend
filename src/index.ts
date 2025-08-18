@@ -116,79 +116,447 @@ app.get("/", (req, res) => {
   });
 });
 
-// Import API routes and middleware
-import * as authController from "./controllers/authController.ts";
-import * as userController from "./controllers/userController.ts";
-// Import controllers
-import * as mentorController from "./controllers/mentorController.ts";
-import * as buddyController from "./controllers/buddyController.ts";
-import * as taskController from "./controllers/taskController.ts";
-import * as resourceController from "./controllers/resourceController.ts";
-// import * as curriculumController from "./controllers/curriculumController.ts";
-// import * as topicController from "./controllers/topicController.ts";
+// Import middleware only (controllers will be loaded dynamically)
 import { authenticateToken, requireManager, requireMentor, requireBuddy } from "./middleware/auth.ts";
 
 // Authentication routes (public)
-app.post("/api/auth/login", (req, res, next) => {
+app.post("/api/auth/login", async (req, res, next) => {
   console.log('[ROUTE] Login route hit with body:', req.body);
-  next();
-}, authController.login);
-app.post("/api/auth/register", authController.register);
+  try {
+    const { login } = await import("./controllers/authController.ts");
+    await login(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Login route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/auth/register", async (req, res, next) => {
+  try {
+    const { register } = await import("./controllers/authController.ts");
+    await register(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Register route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Logout requires authentication to blacklist token
-app.post("/api/auth/logout", authenticateToken, authController.logout);
+app.post("/api/auth/logout", authenticateToken, async (req, res, next) => {
+  try {
+    const { logout } = await import("./controllers/authController.ts");
+    await logout(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Logout route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Authentication routes (protected)
-app.get("/api/auth/me", authenticateToken, authController.getCurrentUser);
-app.post("/api/auth/change-password", authenticateToken, authController.changePassword);
-app.put("/api/auth/role", authenticateToken, requireManager, authController.updateUserRole);
+app.get("/api/auth/me", authenticateToken, async (req, res, next) => {
+  try {
+    const { getCurrentUser } = await import("./controllers/authController.ts");
+    await getCurrentUser(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get current user route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/auth/change-password", authenticateToken, async (req, res, next) => {
+  try {
+    const { changePassword } = await import("./controllers/authController.ts");
+    await changePassword(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Change password route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.put("/api/auth/role", authenticateToken, requireManager, async (req, res, next) => {
+  try {
+    const { updateUserRole } = await import("./controllers/authController.ts");
+    await updateUserRole(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update user role route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // User routes (Manager only for most operations)
-app.get("/api/users", authenticateToken, requireManager, userController.getAllUsers);
-app.get("/api/users/:id", authenticateToken, requireBuddy, userController.getUserById); // All authenticated users can view
-app.put("/api/users/:id", authenticateToken, requireManager, userController.updateUser);
-app.delete("/api/users/:id", authenticateToken, requireManager, userController.deleteUser);
+app.get("/api/users", authenticateToken, requireManager, async (req, res, next) => {
+  try {
+    const { getAllUsers } = await import("./controllers/userController.ts");
+    await getAllUsers(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get all users route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/users/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getUserById } = await import("./controllers/userController.ts");
+    await getUserById(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get user by ID route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.put("/api/users/:id", authenticateToken, requireManager, async (req, res, next) => {
+  try {
+    const { updateUser } = await import("./controllers/userController.ts");
+    await updateUser(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update user route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete("/api/users/:id", authenticateToken, requireManager, async (req, res, next) => {
+  try {
+    const { deleteUser } = await import("./controllers/userController.ts");
+    await deleteUser(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Delete user route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Mentor routes
-app.get("/api/mentors", authenticateToken, requireBuddy, mentorController.getAllMentors); // All can view mentors
-app.get("/api/mentors/:id", authenticateToken, requireBuddy, mentorController.getMentorById);
-app.post("/api/mentors", authenticateToken, requireManager, mentorController.createMentor); // Manager only
-app.put("/api/mentors/:id", authenticateToken, requireMentor, mentorController.updateMentor); // Mentor+ can update
-app.patch("/api/mentors/:id", authenticateToken, requireMentor, mentorController.updateMentor);
-app.delete("/api/mentors/:id", authenticateToken, requireManager, mentorController.deleteMentor); // Manager only
-app.get("/api/mentors/:id/buddies", authenticateToken, requireMentor, mentorController.getMentorBuddies);
+app.get("/api/mentors", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getAllMentors } = await import("./controllers/mentorController.ts");
+    await getAllMentors(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get all mentors route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/mentors/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getMentorById } = await import("./controllers/mentorController.ts");
+    await getMentorById(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get mentor by ID route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/mentors", authenticateToken, requireManager, async (req, res, next) => {
+  try {
+    const { createMentor } = await import("./controllers/mentorController.ts");
+    await createMentor(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Create mentor route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.put("/api/mentors/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { updateMentor } = await import("./controllers/mentorController.ts");
+    await updateMentor(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update mentor route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/mentors/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { updateMentor } = await import("./controllers/mentorController.ts");
+    await updateMentor(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update mentor route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete("/api/mentors/:id", authenticateToken, requireManager, async (req, res, next) => {
+  try {
+    const { deleteMentor } = await import("./controllers/mentorController.ts");
+    await deleteMentor(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Delete mentor route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/mentors/:id/buddies", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { getMentorBuddies } = await import("./controllers/mentorController.ts");
+    await getMentorBuddies(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get mentor buddies route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Buddy routes
-app.get("/api/buddies", authenticateToken, requireMentor, buddyController.getAllBuddies); // Mentor+ can view all
-app.get("/api/buddies/:id", authenticateToken, requireBuddy, buddyController.getBuddyById); // All can view specific buddy
-app.post("/api/buddies", authenticateToken, requireManager, buddyController.createBuddy); // Manager only
-app.put("/api/buddies/:id", authenticateToken, requireMentor, buddyController.updateBuddy); // Mentor+ can update
-app.patch("/api/buddies/:id", authenticateToken, requireMentor, buddyController.updateBuddy);
-app.delete("/api/buddies/:id", authenticateToken, requireManager, buddyController.deleteBuddy); // Manager only
-app.get("/api/buddies/:id/tasks", authenticateToken, requireBuddy, buddyController.getBuddyTasks);
-app.get("/api/buddies/:id/progress", authenticateToken, requireBuddy, buddyController.getBuddyProgress);
-app.put("/api/buddies/:buddyId/progress/:topicId", authenticateToken, requireBuddy, buddyController.updateBuddyProgress);
-app.patch("/api/buddies/:buddyId/progress/:topicId", authenticateToken, requireBuddy, buddyController.updateBuddyProgress);
-app.get("/api/buddies/:id/portfolio", authenticateToken, requireBuddy, buddyController.getBuddyPortfolio);
-app.post("/api/buddies/:id/assign-mentor", authenticateToken, requireManager, buddyController.assignBuddyToMentor);
+app.get("/api/buddies", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { getAllBuddies } = await import("./controllers/buddyController.ts");
+    await getAllBuddies(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get all buddies route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/buddies/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getBuddyById } = await import("./controllers/buddyController.ts");
+    await getBuddyById(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get buddy by ID route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/buddies", authenticateToken, requireManager, async (req, res, next) => {
+  try {
+    const { createBuddy } = await import("./controllers/buddyController.ts");
+    await createBuddy(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Create buddy route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.put("/api/buddies/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { updateBuddy } = await import("./controllers/buddyController.ts");
+    await updateBuddy(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update buddy route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/buddies/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { updateBuddy } = await import("./controllers/buddyController.ts");
+    await updateBuddy(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update buddy route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete("/api/buddies/:id", authenticateToken, requireManager, async (req, res, next) => {
+  try {
+    const { deleteBuddy } = await import("./controllers/buddyController.ts");
+    await deleteBuddy(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Delete buddy route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/buddies/:id/tasks", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getBuddyTasks } = await import("./controllers/buddyController.ts");
+    await getBuddyTasks(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get buddy tasks route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/buddies/:id/progress", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getBuddyProgress } = await import("./controllers/buddyController.ts");
+    await getBuddyProgress(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get buddy progress route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.put("/api/buddies/:buddyId/progress/:topicId", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { updateBuddyProgress } = await import("./controllers/buddyController.ts");
+    await updateBuddyProgress(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update buddy progress route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/buddies/:buddyId/progress/:topicId", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { updateBuddyProgress } = await import("./controllers/buddyController.ts");
+    await updateBuddyProgress(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update buddy progress route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/buddies/:id/portfolio", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getBuddyPortfolio } = await import("./controllers/buddyController.ts");
+    await getBuddyPortfolio(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get buddy portfolio route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/buddies/:id/assign-mentor", authenticateToken, requireManager, async (req, res, next) => {
+  try {
+    const { assignBuddyToMentor } = await import("./controllers/buddyController.ts");
+    await assignBuddyToMentor(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Assign buddy to mentor route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Task routes
-app.get("/api/tasks", authenticateToken, requireBuddy, taskController.getAllTasks); // All can view tasks
-app.get("/api/tasks/:id", authenticateToken, requireBuddy, taskController.getTaskById);
-app.post("/api/tasks", authenticateToken, requireMentor, taskController.createTask); // Mentor+ can create
-app.put("/api/tasks/:id", authenticateToken, requireMentor, taskController.updateTask);
-app.patch("/api/tasks/:id", authenticateToken, requireMentor, taskController.updateTask);
-app.delete("/api/tasks/:id", authenticateToken, requireMentor, taskController.deleteTask);
-app.get("/api/tasks/:id/submissions", authenticateToken, requireBuddy, taskController.getTaskSubmissions);
-app.post("/api/tasks/:id/submissions", authenticateToken, requireBuddy, taskController.createSubmission);
+app.get("/api/tasks", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getAllTasks } = await import("./controllers/taskController.ts");
+    await getAllTasks(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get all tasks route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/tasks/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getTaskById } = await import("./controllers/taskController.ts");
+    await getTaskById(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get task by ID route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/tasks", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { createTask } = await import("./controllers/taskController.ts");
+    await createTask(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Create task route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.put("/api/tasks/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { updateTask } = await import("./controllers/taskController.ts");
+    await updateTask(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update task route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/tasks/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { updateTask } = await import("./controllers/taskController.ts");
+    await updateTask(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update task route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete("/api/tasks/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { deleteTask } = await import("./controllers/taskController.ts");
+    await deleteTask(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Delete task route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/tasks/:id/submissions", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getTaskSubmissions } = await import("./controllers/taskController.ts");
+    await getTaskSubmissions(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get task submissions route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/tasks/:id/submissions", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { createSubmission } = await import("./controllers/taskController.ts");
+    await createSubmission(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Create submission route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Resource routes
-app.get("/api/resources", authenticateToken, requireBuddy, resourceController.getAllResources); // All can view
-app.get("/api/resources/:id", authenticateToken, requireBuddy, resourceController.getResourceById);
-app.post("/api/resources", authenticateToken, requireMentor, resourceController.createResource); // Mentor+ can create
-app.put("/api/resources/:id", authenticateToken, requireMentor, resourceController.updateResource);
-app.patch("/api/resources/:id", authenticateToken, requireMentor, resourceController.updateResource);
-app.delete("/api/resources/:id", authenticateToken, requireMentor, resourceController.deleteResource);
+app.get("/api/resources", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getAllResources } = await import("./controllers/resourceController.ts");
+    await getAllResources(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get all resources route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/resources/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getResourceById } = await import("./controllers/resourceController.ts");
+    await getResourceById(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get resource by ID route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/resources", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { createResource } = await import("./controllers/resourceController.ts");
+    await createResource(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Create resource route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.put("/api/resources/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { updateResource } = await import("./controllers/resourceController.ts");
+    await updateResource(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update resource route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/resources/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { updateResource } = await import("./controllers/resourceController.ts");
+    await updateResource(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update resource route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete("/api/resources/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { deleteResource } = await import("./controllers/resourceController.ts");
+    await deleteResource(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Delete resource route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // TEMPORARILY COMMENTED OUT - Database connection issues
 // Curriculum routes
