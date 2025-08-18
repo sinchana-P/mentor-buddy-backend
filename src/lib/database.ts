@@ -1,11 +1,10 @@
 import 'dotenv/config'; // Load environment variables first
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { config } from '../config/index.ts';
 import * as schema from '../shared/schema.ts';
 
-// Database connection
-const connectionString = config.DATABASE_URL;
+// Database connection - use environment variable directly to avoid config loading issues
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/mentor_buddy';
 
 if (!connectionString) {
   throw new Error('DATABASE_URL environment variable is not set');
@@ -14,19 +13,23 @@ if (!connectionString) {
 // Parse connection URL for debugging
 console.log('🔗 Connecting to database:', connectionString.replace(/:[^:@]*@/, ':***@'));
 
-// Create postgres client with SSL configuration for Supabase
+// Create postgres client with optimized configuration for Supabase
 export const client = postgres(connectionString, {
   prepare: false,
-  max: 1, // Reduce connection pool size
-  ssl: 'require', // Always require SSL for Supabase connections
-  connect_timeout: 30, // Reduce timeout to 30 seconds
-  idle_timeout: 0, // Disable idle timeout
-  max_lifetime: 0, // Disable max lifetime
+  max: 1, // Single connection to avoid connection issues
+  ssl: { rejectUnauthorized: false }, // More permissive SSL for development
+  connect_timeout: 5, // Shorter connect timeout
+  idle_timeout: 20, // Shorter idle timeout
+  max_lifetime: 300, // 5 minute max lifetime
   fetch_types: false, // Disable type fetching for performance
   transform: {
     undefined: null,
   },
   onnotice: () => {}, // Suppress notices
+  connection: {
+    application_name: 'mentor-buddy-backend'
+  },
+  debug: false // Disable debug output
 });
 
 // Create drizzle instance

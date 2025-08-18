@@ -10,9 +10,12 @@ export const users = pgTable("users", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
+  password: text("password").notNull(),
   role: text("role", { enum: ["manager", "mentor", "buddy"] }).notNull(),
   domainRole: text("domain_role", { enum: ["frontend", "backend", "fullstack", "devops", "qa", "hr"] }).notNull(),
   avatarUrl: text("avatar_url"),
+  isActive: boolean("is_active").default(true),
+  lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

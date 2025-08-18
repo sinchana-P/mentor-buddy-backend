@@ -28,9 +28,11 @@ export interface IStorage {
   // User management
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByEmailWithPassword(email: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
+  updateLastLogin(id: string): Promise<void>;
   deleteUser(id: string): Promise<void>;
 
   // Dashboard
@@ -103,8 +105,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const result = await db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
-    return result[0];
+    try {
+      const result = await db.select({
+        id: schema.users.id,
+        email: schema.users.email,
+        name: schema.users.name,
+        role: schema.users.role,
+        domainRole: schema.users.domainRole,
+        avatarUrl: schema.users.avatarUrl,
+        isActive: schema.users.isActive,
+        lastLoginAt: schema.users.lastLoginAt,
+        createdAt: schema.users.createdAt,
+        updatedAt: schema.users.updatedAt
+      }).from(schema.users).where(eq(schema.users.email, email)).limit(1);
+      
+      return result[0] || undefined;
+    } catch (error) {
+      console.error('getUserByEmail error:', error);
+      return undefined;
+    }
+  }
+
+  async getUserByEmailWithPassword(email: string): Promise<User | undefined> {
+    try {
+      console.log('[Database] Querying user by email:', email);
+      
+      // Add timeout to prevent hanging
+      const queryPromise = db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Query timeout')), 3000);
+      });
+      
+      const result = await Promise.race([queryPromise, timeoutPromise]);
+      console.log('[Database] Query completed, found:', result.length, 'users');
+      return result[0] || undefined;
+    } catch (error) {
+      console.error('[Database] getUserByEmailWithPassword error:', error.message);
+      throw error; // Re-throw to handle in controller
+    }
   }
 
   async getAllUsers(): Promise<User[]> {
@@ -112,8 +150,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const result = await db.insert(schema.users).values(insertUser).returning();
-    return result[0];
+    try {
+      // Create user data with all required fields including password
+      const userData = {
+        email: insertUser.email,
+        name: insertUser.name,
+        password: insertUser.password,
+        role: insertUser.role,
+        domainRole: insertUser.domainRole,
+        avatarUrl: insertUser.avatarUrl,
+        isActive: insertUser.isActive !== undefined ? insertUser.isActive : true,
+        lastLoginAt: insertUser.lastLoginAt || null
+      };
+      
+      const result = await db.insert(schema.users).values(userData).returning();
+      
+      if (result.length === 0) {
+        throw new Error('Failed to create user');
+      }
+      
+      return result[0];
+    } catch (error) {
+      console.error('createUser error:', error);
+      throw error;
+    }
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User> {
@@ -126,6 +186,12 @@ export class DatabaseStorage implements IStorage {
       throw new Error('User not found');
     }
     return result[0];
+  }
+
+  async updateLastLogin(id: string): Promise<void> {
+    await db.update(schema.users)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(schema.users.id, id));
   }
 
   async deleteUser(id: string): Promise<void> {

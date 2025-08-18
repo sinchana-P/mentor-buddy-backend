@@ -116,85 +116,97 @@ app.get("/", (req, res) => {
   });
 });
 
-// Import API routes
+// Import API routes and middleware
 import * as authController from "./controllers/authController.ts";
 import * as userController from "./controllers/userController.ts";
+// Import controllers
 import * as mentorController from "./controllers/mentorController.ts";
 import * as buddyController from "./controllers/buddyController.ts";
 import * as taskController from "./controllers/taskController.ts";
 import * as resourceController from "./controllers/resourceController.ts";
-import * as curriculumController from "./controllers/curriculumController.ts";
-import * as topicController from "./controllers/topicController.ts";
+// import * as curriculumController from "./controllers/curriculumController.ts";
+// import * as topicController from "./controllers/topicController.ts";
+import { authenticateToken, requireManager, requireMentor, requireBuddy } from "./middleware/auth.ts";
 
-// Authentication routes
-app.post("/api/auth/login", authController.login);
+// Authentication routes (public)
+app.post("/api/auth/login", (req, res, next) => {
+  console.log('[ROUTE] Login route hit with body:', req.body);
+  next();
+}, authController.login);
 app.post("/api/auth/register", authController.register);
-app.get("/api/auth/me", authController.getCurrentUser);
-app.put("/api/auth/role", authController.updateUserRole);
 
-// User routes
-app.get("/api/users", userController.getAllUsers);
-app.get("/api/users/:id", userController.getUserById);
-app.put("/api/users/:id", userController.updateUser);
-app.delete("/api/users/:id", userController.deleteUser);
+// Logout requires authentication to blacklist token
+app.post("/api/auth/logout", authenticateToken, authController.logout);
+
+// Authentication routes (protected)
+app.get("/api/auth/me", authenticateToken, authController.getCurrentUser);
+app.post("/api/auth/change-password", authenticateToken, authController.changePassword);
+app.put("/api/auth/role", authenticateToken, requireManager, authController.updateUserRole);
+
+// User routes (Manager only for most operations)
+app.get("/api/users", authenticateToken, requireManager, userController.getAllUsers);
+app.get("/api/users/:id", authenticateToken, requireBuddy, userController.getUserById); // All authenticated users can view
+app.put("/api/users/:id", authenticateToken, requireManager, userController.updateUser);
+app.delete("/api/users/:id", authenticateToken, requireManager, userController.deleteUser);
 
 // Mentor routes
-app.get("/api/mentors", mentorController.getAllMentors);
-app.get("/api/mentors/:id", mentorController.getMentorById);
-app.post("/api/mentors", mentorController.createMentor);
-app.put("/api/mentors/:id", mentorController.updateMentor);
-app.patch("/api/mentors/:id", mentorController.updateMentor); // Add PATCH support
-app.delete("/api/mentors/:id", mentorController.deleteMentor);
-app.get("/api/mentors/:id/buddies", mentorController.getMentorBuddies);
+app.get("/api/mentors", authenticateToken, requireBuddy, mentorController.getAllMentors); // All can view mentors
+app.get("/api/mentors/:id", authenticateToken, requireBuddy, mentorController.getMentorById);
+app.post("/api/mentors", authenticateToken, requireManager, mentorController.createMentor); // Manager only
+app.put("/api/mentors/:id", authenticateToken, requireMentor, mentorController.updateMentor); // Mentor+ can update
+app.patch("/api/mentors/:id", authenticateToken, requireMentor, mentorController.updateMentor);
+app.delete("/api/mentors/:id", authenticateToken, requireManager, mentorController.deleteMentor); // Manager only
+app.get("/api/mentors/:id/buddies", authenticateToken, requireMentor, mentorController.getMentorBuddies);
 
 // Buddy routes
-app.get("/api/buddies", buddyController.getAllBuddies);
-app.get("/api/buddies/:id", buddyController.getBuddyById);
-app.post("/api/buddies", buddyController.createBuddy);
-app.put("/api/buddies/:id", buddyController.updateBuddy);
-app.patch("/api/buddies/:id", buddyController.updateBuddy); // Add PATCH support
-app.delete("/api/buddies/:id", buddyController.deleteBuddy);
-app.get("/api/buddies/:id/tasks", buddyController.getBuddyTasks);
-app.get("/api/buddies/:id/progress", buddyController.getBuddyProgress);
-app.put("/api/buddies/:buddyId/progress/:topicId", buddyController.updateBuddyProgress);
-app.patch("/api/buddies/:buddyId/progress/:topicId", buddyController.updateBuddyProgress); // Add PATCH support
-app.get("/api/buddies/:id/portfolio", buddyController.getBuddyPortfolio);
-app.post("/api/buddies/:id/assign-mentor", buddyController.assignBuddyToMentor);
+app.get("/api/buddies", authenticateToken, requireMentor, buddyController.getAllBuddies); // Mentor+ can view all
+app.get("/api/buddies/:id", authenticateToken, requireBuddy, buddyController.getBuddyById); // All can view specific buddy
+app.post("/api/buddies", authenticateToken, requireManager, buddyController.createBuddy); // Manager only
+app.put("/api/buddies/:id", authenticateToken, requireMentor, buddyController.updateBuddy); // Mentor+ can update
+app.patch("/api/buddies/:id", authenticateToken, requireMentor, buddyController.updateBuddy);
+app.delete("/api/buddies/:id", authenticateToken, requireManager, buddyController.deleteBuddy); // Manager only
+app.get("/api/buddies/:id/tasks", authenticateToken, requireBuddy, buddyController.getBuddyTasks);
+app.get("/api/buddies/:id/progress", authenticateToken, requireBuddy, buddyController.getBuddyProgress);
+app.put("/api/buddies/:buddyId/progress/:topicId", authenticateToken, requireBuddy, buddyController.updateBuddyProgress);
+app.patch("/api/buddies/:buddyId/progress/:topicId", authenticateToken, requireBuddy, buddyController.updateBuddyProgress);
+app.get("/api/buddies/:id/portfolio", authenticateToken, requireBuddy, buddyController.getBuddyPortfolio);
+app.post("/api/buddies/:id/assign-mentor", authenticateToken, requireManager, buddyController.assignBuddyToMentor);
 
 // Task routes
-app.get("/api/tasks", taskController.getAllTasks);
-app.get("/api/tasks/:id", taskController.getTaskById);
-app.post("/api/tasks", taskController.createTask);
-app.put("/api/tasks/:id", taskController.updateTask);
-app.patch("/api/tasks/:id", taskController.updateTask); // Add PATCH support
-app.delete("/api/tasks/:id", taskController.deleteTask);
-app.get("/api/tasks/:id/submissions", taskController.getTaskSubmissions);
-app.post("/api/tasks/:id/submissions", taskController.createSubmission);
+app.get("/api/tasks", authenticateToken, requireBuddy, taskController.getAllTasks); // All can view tasks
+app.get("/api/tasks/:id", authenticateToken, requireBuddy, taskController.getTaskById);
+app.post("/api/tasks", authenticateToken, requireMentor, taskController.createTask); // Mentor+ can create
+app.put("/api/tasks/:id", authenticateToken, requireMentor, taskController.updateTask);
+app.patch("/api/tasks/:id", authenticateToken, requireMentor, taskController.updateTask);
+app.delete("/api/tasks/:id", authenticateToken, requireMentor, taskController.deleteTask);
+app.get("/api/tasks/:id/submissions", authenticateToken, requireBuddy, taskController.getTaskSubmissions);
+app.post("/api/tasks/:id/submissions", authenticateToken, requireBuddy, taskController.createSubmission);
 
 // Resource routes
-app.get("/api/resources", resourceController.getAllResources);
-app.get("/api/resources/:id", resourceController.getResourceById);
-app.post("/api/resources", resourceController.createResource);
-app.put("/api/resources/:id", resourceController.updateResource);
-app.patch("/api/resources/:id", resourceController.updateResource); // Add PATCH support
-app.delete("/api/resources/:id", resourceController.deleteResource);
+app.get("/api/resources", authenticateToken, requireBuddy, resourceController.getAllResources); // All can view
+app.get("/api/resources/:id", authenticateToken, requireBuddy, resourceController.getResourceById);
+app.post("/api/resources", authenticateToken, requireMentor, resourceController.createResource); // Mentor+ can create
+app.put("/api/resources/:id", authenticateToken, requireMentor, resourceController.updateResource);
+app.patch("/api/resources/:id", authenticateToken, requireMentor, resourceController.updateResource);
+app.delete("/api/resources/:id", authenticateToken, requireMentor, resourceController.deleteResource);
 
+// TEMPORARILY COMMENTED OUT - Database connection issues
 // Curriculum routes
-app.get("/api/curriculum", curriculumController.getAllCurriculum);
-app.get("/api/curriculum/:id", curriculumController.getCurriculumById);
-app.post("/api/curriculum", curriculumController.createCurriculum);
-app.put("/api/curriculum/:id", curriculumController.updateCurriculum);
-app.delete("/api/curriculum/:id", curriculumController.deleteCurriculum);
+// app.get("/api/curriculum", authenticateToken, requireBuddy, curriculumController.getAllCurriculum); // All can view
+// app.get("/api/curriculum/:id", authenticateToken, requireBuddy, curriculumController.getCurriculumById);
+// app.post("/api/curriculum", authenticateToken, requireMentor, curriculumController.createCurriculum); // Mentor+ can create
+// app.put("/api/curriculum/:id", authenticateToken, requireMentor, curriculumController.updateCurriculum);
+// app.delete("/api/curriculum/:id", authenticateToken, requireMentor, curriculumController.deleteCurriculum);
 
 // Topic routes
-app.get("/api/topics", topicController.getAllTopics);
-app.get("/api/topics/:id", topicController.getTopicById);
-app.post("/api/topics", topicController.createTopic);
-app.put("/api/topics/:id", topicController.updateTopic);
-app.delete("/api/topics/:id", topicController.deleteTopic);
+// app.get("/api/topics", authenticateToken, requireBuddy, topicController.getAllTopics); // All can view
+// app.get("/api/topics/:id", authenticateToken, requireBuddy, topicController.getTopicById);
+// app.post("/api/topics", authenticateToken, requireMentor, topicController.createTopic); // Mentor+ can create
+// app.put("/api/topics/:id", authenticateToken, requireMentor, topicController.updateTopic);
+// app.delete("/api/topics/:id", authenticateToken, requireMentor, topicController.deleteTopic);
 
-// Dashboard routes
-app.get("/api/dashboard/stats", async (req, res) => {
+// Dashboard routes (Manager+ access)
+app.get("/api/dashboard/stats", authenticateToken, requireMentor, async (req, res) => {
   try {
     console.log('[GET /api/dashboard/stats] Fetching dashboard statistics...');
     
@@ -215,7 +227,7 @@ app.get("/api/dashboard/stats", async (req, res) => {
   }
 });
 
-app.get("/api/dashboard/activity", async (req, res) => {
+app.get("/api/dashboard/activity", authenticateToken, requireMentor, async (req, res) => {
   try {
     console.log('[GET /api/dashboard/activity] Fetching recent activity...');
     

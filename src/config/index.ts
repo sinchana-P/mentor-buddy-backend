@@ -16,6 +16,10 @@ export const config = {
   // Session Configuration
   SESSION_SECRET: process.env.SESSION_SECRET || 'your-super-secret-session-key-change-this-in-production',
   
+  // JWT Configuration
+  JWT_SECRET: process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production',
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
+  
   // CORS Configuration
   CORS_ORIGIN: process.env.CORS_ORIGIN || (
     process.env.NODE_ENV === 'production' 
