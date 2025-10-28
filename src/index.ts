@@ -62,8 +62,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Increase body size limit to support base64 file uploads (10MB files become ~13MB base64)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: false }));
 
 
 // CORS debugging middleware
@@ -396,7 +397,7 @@ app.get("/api/buddies/:id", authenticateToken, requireBuddy, async (req, res, ne
   }
 });
 
-app.post("/api/buddies", authenticateToken, requireManager, async (req, res, next) => {
+app.post("/api/buddies", authenticateToken, requireMentor, async (req, res, next) => {
   try {
     const { createBuddy } = await import("./controllers/buddyController.ts");
     await createBuddy(req, res, next);
@@ -426,7 +427,7 @@ app.patch("/api/buddies/:id", authenticateToken, requireMentor, async (req, res,
   }
 });
 
-app.delete("/api/buddies/:id", authenticateToken, requireManager, async (req, res, next) => {
+app.delete("/api/buddies/:id", authenticateToken, requireMentor, async (req, res, next) => {
   try {
     const { deleteBuddy } = await import("./controllers/buddyController.ts");
     await deleteBuddy(req, res, next);
@@ -476,12 +477,43 @@ app.patch("/api/buddies/:buddyId/progress/:topicId", authenticateToken, requireB
   }
 });
 
-app.get("/api/buddies/:id/portfolio", authenticateToken, requireBuddy, async (req, res, next) => {
+// Portfolio CRUD routes
+app.post("/api/buddies/:buddyId/portfolio", authenticateToken, requireBuddy, async (req, res) => {
   try {
-    const { getBuddyPortfolio } = await import("./controllers/buddyController.ts");
-    await getBuddyPortfolio(req, res, next);
+    const { createPortfolio } = await import("./controllers/portfolioController.ts");
+    await createPortfolio(req, res);
   } catch (error) {
-    console.error('[ERROR] Get buddy portfolio route error:', error);
+    console.error('[ERROR] Create portfolio route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/buddies/:buddyId/portfolios", authenticateToken, requireBuddy, async (req, res) => {
+  try {
+    const { getPortfoliosByBuddyId } = await import("./controllers/portfolioController.ts");
+    await getPortfoliosByBuddyId(req, res);
+  } catch (error) {
+    console.error('[ERROR] Get portfolios route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/portfolios/:id", authenticateToken, requireBuddy, async (req, res) => {
+  try {
+    const { updatePortfolio } = await import("./controllers/portfolioController.ts");
+    await updatePortfolio(req, res);
+  } catch (error) {
+    console.error('[ERROR] Update portfolio route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete("/api/portfolios/:id", authenticateToken, requireBuddy, async (req, res) => {
+  try {
+    const { deletePortfolio } = await import("./controllers/portfolioController.ts");
+    await deletePortfolio(req, res);
+  } catch (error) {
+    console.error('[ERROR] Delete portfolio route error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -658,11 +690,55 @@ app.delete("/api/resources/:id", authenticateToken, requireMentor, async (req, r
 // app.delete("/api/curriculum/:id", authenticateToken, requireMentor, curriculumController.deleteCurriculum);
 
 // Topic routes
-// app.get("/api/topics", authenticateToken, requireBuddy, topicController.getAllTopics); // All can view
-// app.get("/api/topics/:id", authenticateToken, requireBuddy, topicController.getTopicById);
-// app.post("/api/topics", authenticateToken, requireMentor, topicController.createTopic); // Mentor+ can create
-// app.put("/api/topics/:id", authenticateToken, requireMentor, topicController.updateTopic);
-// app.delete("/api/topics/:id", authenticateToken, requireMentor, topicController.deleteTopic);
+app.get("/api/topics", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getAllTopics } = await import("./controllers/topicController.ts");
+    await getAllTopics(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get all topics route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/topics/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getTopicById } = await import("./controllers/topicController.ts");
+    await getTopicById(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get topic by ID route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/topics", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { createTopic } = await import("./controllers/topicController.ts");
+    await createTopic(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Create topic route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.put("/api/topics/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { updateTopic } = await import("./controllers/topicController.ts");
+    await updateTopic(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update topic route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete("/api/topics/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { deleteTopic } = await import("./controllers/topicController.ts");
+    await deleteTopic(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Delete topic route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Settings routes
 app.patch("/api/settings/profile", authenticateToken, async (req, res) => {

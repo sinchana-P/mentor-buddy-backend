@@ -81,20 +81,11 @@ export const topics = pgTable("topics", {
   domainRole: text("domain_role", { enum: ["frontend", "backend", "fullstack", "devops", "qa", "hr"] }).notNull(),
 });
 
-export const buddyTopicProgress = pgTable("buddy_topic_progress", {
-  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  buddyId: uuid("buddy_id").references(() => buddies.id).notNull(),
-  topicId: uuid("topic_id").references(() => topics.id).notNull(),
-  checked: boolean("checked").default(false),
-  completedAt: timestamp("completed_at"),
-});
-
-// Buddy-specific topics (created when buddy is created)
+// Buddy-specific topics (tracks which topics are assigned to each buddy and their completion status)
 export const buddyTopics = pgTable("buddy_topics", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   buddyId: uuid("buddy_id").references(() => buddies.id, { onDelete: 'cascade' }).notNull(),
-  topicName: text("topic_name").notNull(),
-  category: text("category"),
+  topicId: uuid("topic_id").references(() => topics.id, { onDelete: 'cascade' }).notNull(),
   checked: boolean("checked").default(false),
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -113,6 +104,21 @@ export const resources = pgTable('resources', {
   tags: jsonb('tags').$type<string[]>(),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const portfolio = pgTable('portfolio', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  buddyId: uuid('buddy_id').references(() => buddies.id, { onDelete: 'cascade' }).notNull(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  technologies: jsonb('technologies').$type<string[]>().default(sql`'[]'::jsonb`),
+  links: jsonb('links').$type<{ label: string; url: string; type: 'github' | 'live' | 'other' }[]>().default(sql`'[]'::jsonb`).notNull(),
+  resourceUrl: text('resource_url'),
+  resourceType: text('resource_type'),
+  resourceName: text('resource_name'),
+  completedAt: timestamp('completed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Insert schemas using Zod validation
@@ -146,10 +152,6 @@ export const insertTopicSchema = createInsertSchema(topics).omit({
   id: true,
 });
 
-export const insertBuddyTopicProgressSchema = createInsertSchema(buddyTopicProgress).omit({
-  id: true,
-});
-
 export const insertBuddyTopicSchema = createInsertSchema(buddyTopics).omit({
   id: true,
   createdAt: true,
@@ -162,6 +164,12 @@ export const insertResourceSchema = createInsertSchema(resources).omit({
 });
 
 export const insertCurriculumSchema = createInsertSchema(curriculum).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPortfolioSchema = createInsertSchema(portfolio).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -180,11 +188,11 @@ export type Submission = typeof submissions.$inferSelect;
 export type InsertSubmission = typeof submissions.$inferInsert;
 export type Topic = typeof topics.$inferSelect;
 export type InsertTopic = typeof topics.$inferInsert;
-export type BuddyTopicProgress = typeof buddyTopicProgress.$inferSelect;
-export type InsertBuddyTopicProgress = typeof buddyTopicProgress.$inferInsert;
 export type BuddyTopic = typeof buddyTopics.$inferSelect;
 export type InsertBuddyTopic = typeof buddyTopics.$inferInsert;
 export type Resource = typeof resources.$inferSelect;
 export type InsertResource = typeof resources.$inferInsert;
 export type Curriculum = typeof curriculum.$inferSelect;
 export type InsertCurriculum = typeof curriculum.$inferInsert;
+export type Portfolio = typeof portfolio.$inferSelect;
+export type InsertPortfolio = typeof portfolio.$inferInsert;

@@ -14,14 +14,14 @@ import {
   type InsertSubmission,
   type Topic,
   type InsertTopic,
-  type BuddyTopicProgress,
-  type InsertBuddyTopicProgress,
   type BuddyTopic,
   type InsertBuddyTopic,
   type Curriculum,
   type InsertCurriculum,
   type Resource,
   type InsertResource,
+  type Portfolio,
+  type InsertPortfolio,
   type DomainRole
 } from '../shared/schema.ts';
 
@@ -62,11 +62,20 @@ export interface IStorage {
   getBuddyPortfolio(buddyId: string): Promise<any[]>;
   assignBuddyToMentor(buddyId: string, mentorId: string): Promise<any>;
 
-  // Buddy Topics (new buddy-specific topics system)
-  createBuddyTopics(buddyId: string, topics: string[]): Promise<BuddyTopic[]>;
+  // Portfolio management
+  createPortfolio(portfolio: InsertPortfolio): Promise<Portfolio>;
+  getPortfolioById(id: string): Promise<Portfolio | undefined>;
+  getPortfoliosByBuddyId(buddyId: string): Promise<Portfolio[]>;
+  updatePortfolio(id: string, updates: Partial<Portfolio>): Promise<Portfolio>;
+  deletePortfolio(id: string): Promise<void>;
+
+  // Buddy Topics (buddy-specific topics system)
+  createBuddyTopics(buddyId: string, topicIds: string[]): Promise<BuddyTopic[]>;
   getBuddyTopics(buddyId: string): Promise<any>;
   updateBuddyTopic(topicId: string, checked: boolean): Promise<BuddyTopic>;
   deleteBuddyTopic(topicId: string): Promise<void>;
+  deleteAllBuddyTopics(buddyId: string): Promise<void>;
+  bulkUpdateBuddyTopics(buddyId: string, topicIds: string[]): Promise<BuddyTopic[]>;
 
   // Task management
   createTask(task: InsertTask): Promise<Task>;
@@ -79,16 +88,13 @@ export interface IStorage {
   createSubmission(submission: InsertSubmission): Promise<Submission>;
   getSubmissionsByTaskId(taskId: string): Promise<any[]>;
 
-  // Topic management
+  // Topic management (master topics list)
   getTopics(domainRole?: string): Promise<Topic[]>;
   getAllTopics(): Promise<Topic[]>;
   getTopicById(id: string): Promise<Topic | undefined>;
   createTopic(topic: InsertTopic): Promise<Topic>;
   updateTopic(id: string, updates: Partial<Topic>): Promise<Topic>;
   deleteTopic(id: string): Promise<void>;
-
-  // Progress tracking
-  createBuddyTopicProgress(progress: InsertBuddyTopicProgress): Promise<BuddyTopicProgress>;
 
   // Resource management
   getAllResources(filters?: { category?: string; difficulty?: string; type?: string; search?: string }): Promise<any[]>;
@@ -692,76 +698,39 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBuddyProgress(buddyId: string): Promise<any> {
-    // Get all topics for the buddy's domain
-    const buddy = await this.getBuddyById(buddyId);
-    if (!buddy) return { topics: [], percentage: 0 };
+    // Get all topics assigned to this buddy with their completion status
+    const topicsData = await this.getBuddyTopics(buddyId);
 
-    const domainTopics = await db.select()
-      .from(schema.topics)
-      .where(eq(schema.topics.domainRole, buddy.user.domainRole as DomainRole));
-
-    // Get completed topics for this buddy
-    const topicIds = domainTopics.map(t => t.id);
-    let completedTopics: any[] = [];
-    
-    if (topicIds.length > 0) {
-      completedTopics = await db.select()
-        .from(schema.buddyTopicProgress)
-        .where(and(
-          eq(schema.buddyTopicProgress.buddyId, buddyId),
-          eq(schema.buddyTopicProgress.checked, true),
-          inArray(schema.buddyTopicProgress.topicId, topicIds)
-        ));
-    }
-
-    const completedTopicIds = new Set(completedTopics.map(ct => ct.topicId));
-    const topics = domainTopics.map(topic => ({
-      ...topic,
-      completed: completedTopicIds.has(topic.id)
-    }));
-
-    const percentage = domainTopics.length > 0 
-      ? Math.round((completedTopics.length / domainTopics.length) * 100)
-      : 0;
-
-    return { topics, percentage };
+    return {
+      topics: topicsData.topics,
+      percentage: topicsData.percentage
+    };
   }
 
   async updateBuddyTopicProgress(buddyId: string, topicId: string, checked: boolean): Promise<any> {
-    // Check if progress record exists
+    // Find the buddy topic record by buddyId and topicId
     const existing = await db.select()
-      .from(schema.buddyTopicProgress)
+      .from(schema.buddyTopics)
       .where(and(
-        eq(schema.buddyTopicProgress.buddyId, buddyId),
-        eq(schema.buddyTopicProgress.topicId, topicId)
+        eq(schema.buddyTopics.buddyId, buddyId),
+        eq(schema.buddyTopics.topicId, topicId)
       ))
       .limit(1);
 
-    if (existing.length > 0) {
-      // Update existing record
-      const updated = await db.update(schema.buddyTopicProgress)
-        .set({ 
-          checked, 
-          completedAt: checked ? new Date() : null 
-        })
-        .where(and(
-          eq(schema.buddyTopicProgress.buddyId, buddyId),
-          eq(schema.buddyTopicProgress.topicId, topicId)
-        ))
-        .returning();
-      return updated[0];
-    } else {
-      // Create new record
-      const created = await db.insert(schema.buddyTopicProgress)
-        .values({
-          buddyId,
-          topicId,
-          checked,
-          completedAt: checked ? new Date() : null
-        })
-        .returning();
-      return created[0];
+    if (existing.length === 0) {
+      throw new Error('Buddy topic not found');
     }
+
+    // Update the existing buddy topic
+    const updated = await db.update(schema.buddyTopics)
+      .set({
+        checked,
+        completedAt: checked ? new Date() : null
+      })
+      .where(eq(schema.buddyTopics.id, existing[0].id))
+      .returning();
+
+    return updated[0];
   }
 
   async getBuddyPortfolio(buddyId: string): Promise<any[]> {
@@ -811,14 +780,13 @@ export class DatabaseStorage implements IStorage {
     return this.updateBuddy(buddyId, { assignedMentorId: mentorId });
   }
 
-  // Buddy Topics methods (new buddy-specific topics system)
-  async createBuddyTopics(buddyId: string, topics: string[]): Promise<BuddyTopic[]> {
-    if (topics.length === 0) return [];
+  // Buddy Topics methods (buddy-specific topics system)
+  async createBuddyTopics(buddyId: string, topicIds: string[]): Promise<BuddyTopic[]> {
+    if (topicIds.length === 0) return [];
 
-    const topicValues = topics.map(topicName => ({
+    const topicValues = topicIds.map(topicId => ({
       buddyId,
-      topicName,
-      category: 'custom', // Default category
+      topicId,
       checked: false
     }));
 
@@ -827,15 +795,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBuddyTopics(buddyId: string): Promise<any> {
-    const topics = await db.select()
-      .from(schema.buddyTopics)
-      .where(eq(schema.buddyTopics.buddyId, buddyId))
-      .orderBy(asc(schema.buddyTopics.createdAt));
+    // Get buddy topics with full topic details
+    const buddyTopicsWithDetails = await db.select({
+      id: schema.buddyTopics.id,
+      buddyId: schema.buddyTopics.buddyId,
+      topicId: schema.buddyTopics.topicId,
+      checked: schema.buddyTopics.checked,
+      completedAt: schema.buddyTopics.completedAt,
+      createdAt: schema.buddyTopics.createdAt,
+      topic: {
+        id: schema.topics.id,
+        name: schema.topics.name,
+        category: schema.topics.category,
+        domainRole: schema.topics.domainRole
+      }
+    })
+    .from(schema.buddyTopics)
+    .leftJoin(schema.topics, eq(schema.buddyTopics.topicId, schema.topics.id))
+    .where(eq(schema.buddyTopics.buddyId, buddyId))
+    .orderBy(asc(schema.topics.category), asc(schema.topics.name));
 
-    const checkedCount = topics.filter(t => t.checked).length;
-    const percentage = topics.length > 0 ? Math.round((checkedCount / topics.length) * 100) : 0;
+    const checkedCount = buddyTopicsWithDetails.filter(t => t.checked).length;
+    const percentage = buddyTopicsWithDetails.length > 0
+      ? Math.round((checkedCount / buddyTopicsWithDetails.length) * 100)
+      : 0;
 
-    return { topics, percentage };
+    return { topics: buddyTopicsWithDetails, percentage };
+  }
+
+  async bulkUpdateBuddyTopics(buddyId: string, topicIds: string[]): Promise<BuddyTopic[]> {
+    // Delete all existing topics for this buddy
+    await this.deleteAllBuddyTopics(buddyId);
+
+    // Create new topic assignments
+    return this.createBuddyTopics(buddyId, topicIds);
   }
 
   async updateBuddyTopic(topicId: string, checked: boolean): Promise<BuddyTopic> {
@@ -855,6 +848,10 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBuddyTopic(topicId: string): Promise<void> {
     await db.delete(schema.buddyTopics).where(eq(schema.buddyTopics.id, topicId));
+  }
+
+  async deleteAllBuddyTopics(buddyId: string): Promise<void> {
+    await db.delete(schema.buddyTopics).where(eq(schema.buddyTopics.buddyId, buddyId));
   }
 
   // Task methods
@@ -1021,6 +1018,39 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCurriculum(id: string): Promise<void> {
     await db.delete(schema.curriculum).where(eq(schema.curriculum.id, id));
+  }
+
+  // Portfolio methods
+  async createPortfolio(portfolio: InsertPortfolio): Promise<Portfolio> {
+    const result = await db.insert(schema.portfolio).values(portfolio).returning();
+    return result[0];
+  }
+
+  async getPortfolioById(id: string): Promise<Portfolio | undefined> {
+    const result = await db.select().from(schema.portfolio).where(eq(schema.portfolio.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getPortfoliosByBuddyId(buddyId: string): Promise<Portfolio[]> {
+    return await db
+      .select()
+      .from(schema.portfolio)
+      .where(eq(schema.portfolio.buddyId, buddyId))
+      .orderBy(desc(schema.portfolio.createdAt));
+  }
+
+  async updatePortfolio(id: string, updates: Partial<Portfolio>): Promise<Portfolio> {
+    const result = await db
+      .update(schema.portfolio)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(schema.portfolio.id, id))
+      .returning();
+    if (result.length === 0) throw new Error('Portfolio item not found');
+    return result[0];
+  }
+
+  async deletePortfolio(id: string): Promise<void> {
+    await db.delete(schema.portfolio).where(eq(schema.portfolio.id, id));
   }
 }
 

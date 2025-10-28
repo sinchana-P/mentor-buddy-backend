@@ -2,21 +2,26 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { storage } from '../lib/storage.ts';
 import { insertBuddySchema, DomainRole } from '../shared/schema.ts';
+import { getDefaultTopicsForDomain } from '../config/defaultTopics.ts';
 
 // Validation schemas
 const createBuddySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters long"),
   email: z.string().email("Invalid email format"),
-  domainRole: z.enum(['frontend', 'backend', 'devops', 'qa', 'hr']),
-  topics: z.array(z.string()).optional() // Optional array of topic names
+  domainRole: z.enum(['frontend', 'backend', 'fullstack', 'devops', 'qa', 'hr']),
+  assignedMentorId: z.string().uuid("Invalid mentor ID format").optional(), // Optional mentor ID
+  topicIds: z.array(z.string()).optional() // Optional array of topic IDs
 });
 
 const updateBuddySchema = z.object({
   name: z.string().min(2).optional(),
   email: z.string().email().optional(),
-  domainRole: z.enum(['frontend', 'backend', 'devops', 'qa', 'hr']).optional(),
+  domainRole: z.enum(['frontend', 'backend', 'fullstack', 'devops', 'qa', 'hr']).optional(),
   status: z.enum(['active', 'inactive', 'exited']).optional(),
-  assignedMentorId: z.string().uuid().optional()
+  assignedMentorId: z.preprocess(
+    (val) => val === null ? undefined : val,
+    z.string().uuid().optional()
+  ) // Converts null to undefined, then validates as optional UUID
 });
 
 const getAllBuddiesQuerySchema = z.object({
@@ -93,7 +98,7 @@ export const createBuddy = async (req: Request, res: Response) => {
     
     // Validate request body
     const validatedData = createBuddySchema.parse(req.body);
-    const { name, email, domainRole, topics } = validatedData;
+    const { name, email, domainRole, assignedMentorId, topicIds } = validatedData;
 
     try {
       // Create user first
@@ -120,19 +125,34 @@ export const createBuddy = async (req: Request, res: Response) => {
         });
       }
 
-      // Create buddy profile
+      // Create buddy profile with optional mentor assignment
       const buddy = await storage.createBuddy({
         userId: user.id as string,
-        status: 'active'
+        status: 'active',
+        assignedMentorId: assignedMentorId || undefined
       });
 
-      console.log('[POST /api/buddies] Buddy created:', buddy.id);
+      console.log('[POST /api/buddies] Buddy created:', buddy.id, assignedMentorId ? `with mentor: ${assignedMentorId}` : 'without mentor');
 
-      // Create buddy topics if provided
-      if (topics && topics.length > 0) {
-        console.log('[POST /api/buddies] Creating buddy topics:', topics);
-        await storage.createBuddyTopics(buddy.id, topics);
-        console.log('[POST /api/buddies] Buddy topics created');
+      // Assign topics based on provided topicIds or auto-assign all topics for domain
+      let assignedTopicIds: string[] = [];
+
+      if (topicIds && topicIds.length > 0) {
+        // Use provided topic IDs
+        assignedTopicIds = topicIds;
+        console.log('[POST /api/buddies] Assigning selected topics. Count:', assignedTopicIds.length);
+      } else {
+        // Auto-assign all topics based on domain role
+        const availableTopics = await storage.getTopics(domainRole);
+        assignedTopicIds = availableTopics.map(t => t.id);
+        console.log('[POST /api/buddies] Auto-assigning all topics for domain:', domainRole, 'Count:', assignedTopicIds.length);
+      }
+
+      if (assignedTopicIds.length > 0) {
+        await storage.createBuddyTopics(buddy.id, assignedTopicIds);
+        console.log('[POST /api/buddies] Topics assigned successfully');
+      } else {
+        console.warn('[POST /api/buddies] No topics to assign for domain:', domainRole);
       }
 
       res.status(201).json({
@@ -212,14 +232,17 @@ export const updateBuddy = async (req: Request, res: Response) => {
     }
     
     const { name, email, domainRole, status, assignedMentorId } = validatedData;
-    
+
+    // Check if domain role is changing
+    const isDomainRoleChanging = domainRole !== undefined && domainRole !== currentBuddy.user.domainRole;
+
     // Update user info if provided
     if (name || email || domainRole !== undefined) {
       const userUpdates: any = {};
       if (name) userUpdates.name = name;
       if (email) userUpdates.email = email;
       if (domainRole !== undefined) userUpdates.domainRole = domainRole;
-      
+
       try {
         await storage.updateUser(currentBuddy.user.id, userUpdates);
       } catch (error: any) {
@@ -229,12 +252,25 @@ export const updateBuddy = async (req: Request, res: Response) => {
         throw error;
       }
     }
-    
+
+    // If domain role changed, sync topics
+    if (isDomainRoleChanging && domainRole) {
+      console.log(`[PUT /api/buddies/${id}] Domain role changed from ${currentBuddy.user.domainRole} to ${domainRole}, syncing topics...`);
+
+      // Get topics for the new domain role
+      const availableTopics = await storage.getTopics(domainRole);
+      const topicIds = availableTopics.map(t => t.id);
+
+      // Replace all buddy topics with new domain topics
+      await storage.bulkUpdateBuddyTopics(id, topicIds);
+      console.log(`[PUT /api/buddies/${id}] Synced ${topicIds.length} topics for new domain role`);
+    }
+
     // Update buddy-specific info
     const buddyUpdates: any = {};
     if (status !== undefined) buddyUpdates.status = status;
     if (assignedMentorId !== undefined) buddyUpdates.assignedMentorId = assignedMentorId;
-    
+
     if (Object.keys(buddyUpdates).length > 0) {
       await storage.updateBuddy(id, buddyUpdates);
     }
