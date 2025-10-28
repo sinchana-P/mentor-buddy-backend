@@ -1,94 +1,97 @@
-import 'dotenv/config'; // Load environment variables first
+import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '../shared/schema.ts';
 
-// Database connection - use environment variable directly to avoid config loading issues
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/mentor_buddy';
 
 if (!connectionString) {
   throw new Error('DATABASE_URL environment variable is not set');
 }
 
-// Parse connection URL for debugging
 console.log('🔗 Connecting to database:', connectionString.replace(/:[^:@]*@/, ':***@'));
 
-// Lazy database connection - only create when needed
+// Lazy connection - only create when first used
 let _client: postgres.Sql | null = null;
 let _db: any | null = null;
 
-const createClient = () => {
+function getClient() {
   if (!_client) {
-    console.log('🔄 Creating database client...');
+    console.log('🔄 Creating database client (lazy)...');
     _client = postgres(connectionString, {
       prepare: false,
-      max: 2, // Allow 2 connections
-      ssl: { rejectUnauthorized: false },
-      connect_timeout: 10, // 10 second timeout
-      idle_timeout: 30, // 30 second idle timeout
-      max_lifetime: 600, // 10 minute max lifetime
+      max: 10, // Increased from 1 to 10 to handle concurrent requests
+      ssl: connectionString.includes('supabase.com') ? 'require' : false,
+      connect_timeout: 30,
+      idle_timeout: 20,
+      max_lifetime: 60 * 30,
       fetch_types: false,
-      transform: {
-        undefined: null,
-      },
-      onnotice: () => {}, // Suppress notices
+      transform: { undefined: null },
+      onnotice: () => {},
       connection: {
         application_name: 'mentor-buddy-backend'
       },
-      debug: false
+      debug: process.env.NODE_ENV === 'development'
     });
   }
   return _client;
-};
+}
 
-const createDb = () => {
+function getDb() {
   if (!_db) {
-    _db = drizzle(createClient(), { schema });
+    _db = drizzle(getClient(), { schema });
   }
   return _db;
-};
+}
 
-// Export lazy getters
-export const getClient = () => createClient();
-export const getDb = () => createDb();
-
-// For backward compatibility, create getters that only initialize when accessed
-export const client = new Proxy({} as postgres.Sql, {
-  get(target, prop) {
-    return createClient()[prop as keyof postgres.Sql];
-  }
-});
-
+// Export getters that create connection only when accessed
 export const db = new Proxy({} as any, {
-  get(target, prop) {
-    return createDb()[prop];
+  get(_, prop) {
+    return getDb()[prop];
   }
 });
 
-// Test database connection
-export async function testConnection() {
-  try {
-    console.log('Testing database connection with config:', {
-      host: connectionString.split('@')[1]?.split(':')[0],
-      port: connectionString.split(':')[2]?.split('/')[0],
-      ssl: 'enabled',
-      nodeEnv: process.env.NODE_ENV
-    });
-    
-    const result = await createClient()`SELECT 1 as test`;
-    console.log('✅ Database connection successful, result:', result);
-    return true;
-  } catch (error) {
-    console.error('❌ Database connection failed:', {
-      message: error.message,
-      code: error.code,
-      errno: error.errno,
-      syscall: error.syscall,
-      hostname: error.hostname,
-      port: error.port,
-      address: error.address
-    });
-    
-    return false;
+export const client = new Proxy({} as postgres.Sql, {
+  get(_, prop) {
+    return getClient()[prop as keyof postgres.Sql];
   }
+});
+
+// Test database connection with timeout
+export async function testConnection() {
+  return new Promise<boolean>((resolve) => {
+    const timeoutId = setTimeout(() => {
+      console.error('❌ Database connection timeout after 5 seconds');
+      resolve(false);
+    }, 5000);
+
+    (async () => {
+      try {
+        console.log('Testing database connection with config:', {
+          host: connectionString.split('@')[1]?.split(':')[0],
+          port: connectionString.split(':')[2]?.split('/')[0],
+          ssl: 'enabled',
+          nodeEnv: process.env.NODE_ENV
+        });
+        
+        const result = await getClient()`SELECT 1 as test`;
+        clearTimeout(timeoutId);
+        console.log('✅ Database connection successful, result:', result);
+        resolve(true);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        console.error('❌ Database connection failed:', {
+          message: error.message,
+          code: error.code,
+          errno: error.errno,
+          syscall: error.syscall,
+          hostname: error.hostname,
+          port: error.port,
+          address: error.address
+        });
+        
+        resolve(false);
+      }
+    })();
+  });
 }

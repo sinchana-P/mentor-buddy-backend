@@ -89,6 +89,17 @@ export const buddyTopicProgress = pgTable("buddy_topic_progress", {
   completedAt: timestamp("completed_at"),
 });
 
+// Buddy-specific topics (created when buddy is created)
+export const buddyTopics = pgTable("buddy_topics", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  buddyId: uuid("buddy_id").references(() => buddies.id, { onDelete: 'cascade' }).notNull(),
+  topicName: text("topic_name").notNull(),
+  category: text("category"),
+  checked: boolean("checked").default(false),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const resources = pgTable('resources', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: varchar('title', { length: 255 }).notNull(),
@@ -139,6 +150,11 @@ export const insertBuddyTopicProgressSchema = createInsertSchema(buddyTopicProgr
   id: true,
 });
 
+export const insertBuddyTopicSchema = createInsertSchema(buddyTopics).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertResourceSchema = createInsertSchema(resources).omit({
   id: true,
   createdAt: true,
@@ -166,6 +182,8 @@ export type Topic = typeof topics.$inferSelect;
 export type InsertTopic = typeof topics.$inferInsert;
 export type BuddyTopicProgress = typeof buddyTopicProgress.$inferSelect;
 export type InsertBuddyTopicProgress = typeof buddyTopicProgress.$inferInsert;
+export type BuddyTopic = typeof buddyTopics.$inferSelect;
+export type InsertBuddyTopic = typeof buddyTopics.$inferInsert;
 export type Resource = typeof resources.$inferSelect;
 export type InsertResource = typeof resources.$inferInsert;
 export type Curriculum = typeof curriculum.$inferSelect;

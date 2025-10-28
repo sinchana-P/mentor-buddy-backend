@@ -1,5 +1,4 @@
 import express, { Request, Response, NextFunction } from "express";
-import cors from "cors";
 import dotenv from "dotenv";
 
 // Load environment variables
@@ -30,15 +29,51 @@ const getCorsOrigins = () => {
 
 const corsOrigins = getCorsOrigins();
 
-app.use(cors({
-  origin: corsOrigins,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+// Manual CORS handling for better control
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Allow localhost in development, or check against production origins
+  if (origin) {
+    if (process.env.NODE_ENV !== 'production') {
+      // In development, allow all localhost origins
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        res.header('Access-Control-Allow-Origin', origin);
+      }
+    } else {
+      // In production, check against allowed origins
+      const allowedOrigins = typeof corsOrigins === 'boolean' ? [] : corsOrigins;
+      if (corsOrigins === true || allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+      }
+    }
+  }
+  
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,x-app-name,x-app-id,x-request-signature,x-user-id');
+  res.header('Access-Control-Max-Age', '86400');
+  
+  // Handle preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+
+// CORS debugging middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && req.path.startsWith('/api')) {
+    console.log(`CORS: ${req.method} ${req.path} from origin: ${origin}`);
+  }
+  next();
+});
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -65,23 +100,48 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Debug endpoint to test database connection
+// Test endpoint to check if logging works
+app.get("/api/test", (req, res) => {
+  console.log('[TEST] Test endpoint hit!');
+  res.json({ message: "Test endpoint works", timestamp: new Date().toISOString() });
+});
+
+// Debug endpoint to test database connection and mentors table
 app.get("/api/debug/db", async (req, res) => {
   try {
-    console.log('Debug: Testing database connection...');
-    const { testConnection } = await import("./lib/database.ts");
-    const connected = await testConnection();
+    console.log('Debug: Bypassing timeout and testing simple queries...');
+    
+    // Use the existing database connection from our storage
+    const { storage } = await import("./lib/storage.ts");
+    
+    // Test if we can get all users first (simpler query)
+    console.log('Testing getAllUsers...');
+    const users = await storage.getAllUsers();
+    console.log('Users found:', users.length);
+    
+    // Test mentor query directly
+    console.log('Testing getMentors directly...');
+    const mentors = await storage.getMentors({ status: 'all' });
+    console.log('Mentors found:', mentors.length);
+    
+    // Test getAllMentors
+    console.log('Testing getAllMentors...');
+    const allMentors = await storage.getAllMentors();
+    console.log('AllMentors found:', allMentors.length);
+    
     res.json({ 
-      dbConnected: connected,
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-      databaseUrl: process.env.DATABASE_URL ? 'SET' : 'NOT_SET'
+      dbConnected: true,
+      usersCount: users.length,
+      mentorsCount: mentors.length,
+      allMentorsCount: allMentors.length,
+      sampleUsers: users.slice(0, 3).map(u => ({ id: u.id, email: u.email, role: u.role })),
+      sampleMentors: mentors.slice(0, 3),
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Debug: Database test failed:', error);
+    console.error('Debug: Storage test failed:', error);
     res.status(500).json({ 
       error: error.message,
-      stack: error.stack,
       dbConnected: false 
     });
   }
@@ -227,8 +287,11 @@ app.delete("/api/users/:id", authenticateToken, requireManager, async (req, res,
 // Mentor routes
 app.get("/api/mentors", authenticateToken, requireBuddy, async (req, res, next) => {
   try {
+    console.log('[ROUTE] /api/mentors route hit, importing controller...');
     const { getAllMentors } = await import("./controllers/mentorController.ts");
+    console.log('[ROUTE] Controller imported, calling getAllMentors...');
     await getAllMentors(req, res, next);
+    console.log('[ROUTE] getAllMentors call completed');
   } catch (error) {
     console.error('[ERROR] Get all mentors route error:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -302,6 +365,23 @@ app.get("/api/buddies", authenticateToken, requireMentor, async (req, res, next)
     await getAllBuddies(req, res, next);
   } catch (error) {
     console.error('[ERROR] Get all buddies route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Test route to verify Express route registration
+app.get("/api/buddies/test-route-works", (req, res) => {
+  res.json({ message: "Test route works!" });
+});
+
+// Buddy Topics route - MUST come BEFORE /api/buddies/:id to avoid being shadowed
+app.get("/api/buddies/:id/topics", authenticateToken, requireBuddy, async (req, res, next) => {
+  console.log('[ROUTE HIT] /api/buddies/:id/topics -  ID:', req.params.id);
+  try {
+    const { getBuddyTopics } = await import("./controllers/buddyController.ts");
+    await getBuddyTopics(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get buddy topics route error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -412,6 +492,17 @@ app.post("/api/buddies/:id/assign-mentor", authenticateToken, requireManager, as
     await assignBuddyToMentor(req, res, next);
   } catch (error) {
     console.error('[ERROR] Assign buddy to mentor route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Update buddy topic by ID (separate route pattern)
+app.patch("/api/buddy-topics/:topicId", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { updateBuddyTopicById } = await import("./controllers/buddyController.ts");
+    await updateBuddyTopicById(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update buddy topic route error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -573,22 +664,67 @@ app.delete("/api/resources/:id", authenticateToken, requireMentor, async (req, r
 // app.put("/api/topics/:id", authenticateToken, requireMentor, topicController.updateTopic);
 // app.delete("/api/topics/:id", authenticateToken, requireMentor, topicController.deleteTopic);
 
+// Settings routes
+app.patch("/api/settings/profile", authenticateToken, async (req, res) => {
+  try {
+    console.log('[ROUTE] Settings profile route hit, user:', req.user?.id || 'NO USER');
+    const { updateProfile } = await import("./controllers/settingsController.ts");
+    await updateProfile(req, res);
+  } catch (error) {
+    console.error('[ERROR] Update profile route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/settings/preferences", authenticateToken, async (req, res) => {
+  try {
+    const { updatePreferences } = await import("./controllers/settingsController.ts");
+    await updatePreferences(req, res);
+  } catch (error) {
+    console.error('[ERROR] Update preferences route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/settings/privacy", authenticateToken, async (req, res, next) => {
+  try {
+    const { updatePrivacySettings } = await import("./controllers/settingsController.ts");
+    await updatePrivacySettings(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update privacy settings route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/settings/export", authenticateToken, async (req, res, next) => {
+  try {
+    const { exportUserData } = await import("./controllers/settingsController.ts");
+    await exportUserData(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Export user data route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete("/api/settings/account", authenticateToken, async (req, res, next) => {
+  try {
+    const { deleteAccount } = await import("./controllers/settingsController.ts");
+    await deleteAccount(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Delete account route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Dashboard routes (Manager+ access)
 app.get("/api/dashboard/stats", authenticateToken, requireMentor, async (req, res) => {
   try {
     console.log('[GET /api/dashboard/stats] Fetching dashboard statistics...');
+    const { storage } = await import("./lib/storage.ts");
+    const stats = await storage.getDashboardStats();
     
-    // For now, return mock data while database setup is in progress
-    const mockStats = {
-      totalMentors: 8,
-      totalBuddies: 24,
-      activeTasks: 12,
-      completedTasks: 45,
-      completionRate: 79
-    };
-    
-    console.log('[GET /api/dashboard/stats] Returning mock stats:', mockStats);
-    res.json(mockStats);
+    console.log('[GET /api/dashboard/stats] Returning stats:', stats);
+    res.json(stats);
   } catch (error) {
     console.error('[GET /api/dashboard/stats] Error:', error);
     res.status(500).json({ message: "Internal server error" });
@@ -598,34 +734,11 @@ app.get("/api/dashboard/stats", authenticateToken, requireMentor, async (req, re
 app.get("/api/dashboard/activity", authenticateToken, requireMentor, async (req, res) => {
   try {
     console.log('[GET /api/dashboard/activity] Fetching recent activity...');
+    const { storage } = await import("./lib/storage.ts");
+    const activity = await storage.getRecentActivity();
     
-    // For now, return mock data while database setup is in progress
-    const mockActivity = [
-      {
-        id: '1',
-        type: 'task_assigned',
-        message: 'John Doe assigned "React Components" to Sarah Wilson',
-        timestamp: new Date().toISOString(),
-        status: 'in_progress'
-      },
-      {
-        id: '2',
-        type: 'task_completed',
-        message: 'Mike Johnson completed "Node.js API Development"',
-        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-        status: 'completed'
-      },
-      {
-        id: '3',
-        type: 'buddy_assigned',
-        message: 'Emma Davis was assigned to mentor Alice Cooper',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-        status: 'active'
-      }
-    ];
-    
-    console.log('[GET /api/dashboard/activity] Returning mock activity:', mockActivity.length, 'items');
-    res.json(mockActivity);
+    console.log('[GET /api/dashboard/activity] Returning activity:', activity.length, 'items');
+    res.json(activity);
   } catch (error) {
     console.error('[GET /api/dashboard/activity] Error:', error);
     res.status(500).json({ message: "Internal server error" });

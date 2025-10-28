@@ -287,8 +287,68 @@ export const getCurrentUser = async (req: Request, res: Response) => {
 };
 
 export const changePassword = async (req: Request, res: Response) => {
-  // Temporarily disabled - database connection issues
-  return res.status(503).json({ message: "Password change temporarily unavailable" });
+  try {
+    console.log('[POST /api/auth/change-password] Change password request');
+    console.log('[POST /api/auth/change-password] req.user:', JSON.stringify(req.user, null, 2));
+    
+    // Get user from middleware - check both id and userId fields  
+    const userId = req.user?.id || req.user?.userId;
+    console.log('[POST /api/auth/change-password] Extracted userId:', userId);
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized - no userId found" });
+    }
+
+    // Validate request body
+    const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+
+    // Import storage here to avoid circular dependencies
+    const { storage } = await import('../lib/storage.ts');
+
+    // Get user with password for verification
+    const user = await storage.getUserByEmailWithPassword(req.user!.email);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await comparePassword(currentPassword, user.password!);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // Validate password strength
+    const passwordStrength = validatePasswordStrength(newPassword);
+    if (!passwordStrength.isValid) {
+      return res.status(400).json({ 
+        message: "Password does not meet requirements", 
+        requirements: passwordStrength.requirements 
+      });
+    }
+
+    // Hash new password
+    const hashedNewPassword = await hashPassword(newPassword);
+
+    // Update password in database
+    await storage.updateUser(userId, { 
+      password: hashedNewPassword,
+      updatedAt: new Date()
+    });
+
+    console.log('[POST /api/auth/change-password] Password changed successfully');
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error('[POST /api/auth/change-password] Error:', error);
+    
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        message: "Validation error", 
+        errors: error.issues 
+      });
+    }
+    
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 export const logout = async (req: Request, res: Response) => {

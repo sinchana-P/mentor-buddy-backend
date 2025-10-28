@@ -7,7 +7,8 @@ import { insertBuddySchema, DomainRole } from '../shared/schema.ts';
 const createBuddySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters long"),
   email: z.string().email("Invalid email format"),
-  domainRole: z.enum(['frontend', 'backend', 'devops', 'qa', 'hr'])
+  domainRole: z.enum(['frontend', 'backend', 'devops', 'qa', 'hr']),
+  topics: z.array(z.string()).optional() // Optional array of topic names
 });
 
 const updateBuddySchema = z.object({
@@ -92,42 +93,49 @@ export const createBuddy = async (req: Request, res: Response) => {
     
     // Validate request body
     const validatedData = createBuddySchema.parse(req.body);
-    const { name, email, domainRole } = validatedData;
-    
+    const { name, email, domainRole, topics } = validatedData;
+
     try {
       // Create user first
-      console.log('[POST /api/buddies] Creating user with data:', { 
-        email, 
-        name, 
-        role: 'buddy', 
-        domainRole 
+      console.log('[POST /api/buddies] Creating user with data:', {
+        email,
+        name,
+        role: 'buddy',
+        domainRole
       });
-      
+
       const user = await storage.createUser({
         email,
         name,
         role: 'buddy',
         domainRole: domainRole as DomainRole
       });
-      
+
       console.log('[POST /api/buddies] User created:', user.id);
-      
+
       if (!user || !user.id) {
-        return res.status(400).json({ 
-          message: "Invalid buddy data", 
+        return res.status(400).json({
+          message: "Invalid buddy data",
           errors: [{ field: "userId", message: "Failed to create user account" }]
         });
       }
-      
+
       // Create buddy profile
       const buddy = await storage.createBuddy({
         userId: user.id as string,
         status: 'active'
       });
-      
+
       console.log('[POST /api/buddies] Buddy created:', buddy.id);
-      
-      res.status(201).json({ 
+
+      // Create buddy topics if provided
+      if (topics && topics.length > 0) {
+        console.log('[POST /api/buddies] Creating buddy topics:', topics);
+        await storage.createBuddyTopics(buddy.id, topics);
+        console.log('[POST /api/buddies] Buddy topics created');
+      }
+
+      res.status(201).json({
         id: buddy.id,
         user: {
           id: user.id,
@@ -408,7 +416,7 @@ export const updateBuddyProgress = async (req: Request, res: Response) => {
 export const getBuddyPortfolio = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     // Validate ID format
     if (!id || typeof id !== 'string') {
       return res.status(400).json({ message: "Invalid buddy ID" });
@@ -416,11 +424,68 @@ export const getBuddyPortfolio = async (req: Request, res: Response) => {
 
     console.log(`[GET /api/buddies/${id}/portfolio] Fetching buddy portfolio...`);
     const portfolio = await storage.getBuddyPortfolio(id);
-    
+
     console.log(`[GET /api/buddies/${id}/portfolio] Portfolio items found:`, portfolio.length);
     res.json(portfolio);
   } catch (error) {
     console.error(`[GET /api/buddies/${req.params.id}/portfolio] Error:`, error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// New buddy-specific topics endpoints
+export const getBuddyTopics = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ID format
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ message: "Invalid buddy ID" });
+    }
+
+    console.log(`[GET /api/buddies/${id}/topics] Fetching buddy topics...`);
+    const topicsData = await storage.getBuddyTopics(id);
+
+    console.log(`[GET /api/buddies/${id}/topics] Topics found:`, topicsData.topics.length);
+    res.json(topicsData);
+  } catch (error) {
+    console.error(`[GET /api/buddies/${req.params.id}/topics] Error:`, error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const updateBuddyTopicById = async (req: Request, res: Response) => {
+  try {
+    const { topicId } = req.params;
+
+    // Validate ID format
+    if (!topicId || typeof topicId !== 'string') {
+      return res.status(400).json({ message: "Invalid topic ID" });
+    }
+
+    console.log(`[PATCH /api/buddy-topics/${topicId}] Updating buddy topic:`, req.body);
+
+    // Validate request body
+    const { checked } = updateProgressSchema.parse(req.body);
+
+    const updatedTopic = await storage.updateBuddyTopic(topicId, checked);
+
+    console.log(`[PATCH /api/buddy-topics/${topicId}] Topic updated successfully`);
+    res.json(updatedTopic);
+  } catch (error) {
+    console.error(`[PATCH /api/buddy-topics/${req.params.topicId}] Error:`, error);
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        message: "Invalid topic data",
+        errors: error.issues
+      });
+    }
+
+    if (error instanceof Error && error.message === 'Buddy topic not found') {
+      return res.status(404).json({ message: "Topic not found" });
+    }
+
     res.status(500).json({ message: "Internal server error" });
   }
 };

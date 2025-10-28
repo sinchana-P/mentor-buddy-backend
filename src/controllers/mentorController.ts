@@ -33,6 +33,8 @@ const getMentorBuddiesQuerySchema = z.object({
 export const getAllMentors = async (req: Request, res: Response) => {
   try {
     console.log('[GET /api/mentors] Fetching all mentors...');
+    console.log('[GET /api/mentors] Query params:', req.query);
+    console.log('[GET /api/mentors] Calling storage.getAllMentors...');
     
     // Validate query parameters
     const { domain, search } = getMentorsQuerySchema.parse(req.query);
@@ -42,7 +44,12 @@ export const getAllMentors = async (req: Request, res: Response) => {
       search: search as string
     });
     
-    console.log('[GET /api/mentors] Mentors found:', mentors.length);
+    console.log('[GET /api/mentors] Mentors found via Drizzle:', mentors.length);
+    
+    if (mentors.length > 0) {
+      console.log('[GET /api/mentors] Sample mentor:', JSON.stringify(mentors[0], null, 2));
+    }
+    
     res.json(mentors);
   } catch (error) {
     console.error('[GET /api/mentors] Error fetching mentors:', error);
@@ -54,7 +61,10 @@ export const getAllMentors = async (req: Request, res: Response) => {
       });
     }
     
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ 
+      message: "Internal server error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 

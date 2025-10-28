@@ -13,15 +13,21 @@ declare global {
 }
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+  console.log('[AUTH] authenticateToken called for:', req.method, req.path);
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  
+  console.log('[AUTH] Auth header present:', !!authHeader);
+  console.log('[AUTH] Token present:', !!token);
 
   if (!token) {
+    console.log('[AUTH] No token provided');
     return res.status(401).json({ message: 'Access token required' });
   }
 
   // Check if token is blacklisted
   if (tokenBlacklist.isTokenBlacklisted(token)) {
+    console.log('[AUTH] Token is blacklisted');
     return res.status(401).json({ message: 'Token has been revoked' });
   }
 
@@ -29,8 +35,10 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     const decoded = verifyToken(token);
     req.user = decoded;
     req.token = token; // Store token for potential logout
+    console.log('[AUTH] Token verified successfully for user:', decoded.userId, 'role:', decoded.role);
     next();
   } catch (error) {
+    console.log('[AUTH] Token verification failed:', error.message);
     return res.status(403).json({ message: 'Invalid or expired token' });
   }
 };

@@ -4,12 +4,12 @@ import { storage } from '../lib/storage.ts';
 import { insertTaskSchema, insertSubmissionSchema, type InsertTask, type InsertSubmission } from '../shared/schema.ts';
 
 // Validation schemas
-const createTaskSchema = insertTaskSchema.extend({
+const createTaskSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
   mentorId: z.string().uuid("Invalid mentor ID format"),
   buddyId: z.string().uuid("Invalid buddy ID format"),
-  dueDate: z.string().datetime().optional().or(z.date().optional()),
+  dueDate: z.string().optional().or(z.date().optional()),
   status: z.enum(['pending', 'in_progress', 'completed', 'overdue']).optional()
 });
 
