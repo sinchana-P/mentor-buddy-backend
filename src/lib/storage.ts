@@ -208,16 +208,19 @@ export class DatabaseStorage implements IStorage {
   // Dashboard methods
   async getDashboardStats(): Promise<any> {
     try {
-      // Use simpler approach - count users by role instead of separate tables
-      const [mentorsCount, buddiesCount, tasksCount, completedTasksCount] = await Promise.all([
-        db.select({ count: sql<number>`count(*)` }).from(schema.users).where(eq(schema.users.role, 'mentor')),
-        db.select({ count: sql<number>`count(*)` }).from(schema.users).where(eq(schema.users.role, 'buddy')),
+      // Count from mentors and buddies tables, not users table
+      // This ensures we only count users who have proper mentor/buddy profiles
+      const [mentorsCount, buddiesCount, activeBuddiesCount, tasksCount, completedTasksCount] = await Promise.all([
+        db.select({ count: sql<number>`count(*)` }).from(schema.mentors),
+        db.select({ count: sql<number>`count(*)` }).from(schema.buddies),
+        db.select({ count: sql<number>`count(*)` }).from(schema.buddies).where(eq(schema.buddies.status, 'active')),
         db.select({ count: sql<number>`count(*)` }).from(schema.tasks),
         db.select({ count: sql<number>`count(*)` }).from(schema.tasks).where(eq(schema.tasks.status, 'completed'))
       ]);
 
       const totalMentors = Number(mentorsCount[0]?.count || 0);
       const totalBuddies = Number(buddiesCount[0]?.count || 0);
+      const activeBuddies = Number(activeBuddiesCount[0]?.count || 0);
       const totalTasks = Number(tasksCount[0]?.count || 0);
       const completedTasks = Number(completedTasksCount[0]?.count || 0);
       const activeTasks = totalTasks - completedTasks;
@@ -226,7 +229,7 @@ export class DatabaseStorage implements IStorage {
       return {
         totalMentors,
         totalBuddies,
-        activeBuddies: totalBuddies, // Assume all buddies are active for now
+        activeBuddies,
         pendingTasks: activeTasks,
         completedTasks,
         overdueTasks: 0, // No overdue logic for now
@@ -868,22 +871,77 @@ export class DatabaseStorage implements IStorage {
   async getAllTasks(filters?: { status?: string; search?: string; buddyId?: string }): Promise<any[]> {
     // Build where conditions
     const conditions = [];
-    
+
     if (filters?.status && filters.status !== 'all') {
       conditions.push(eq(schema.tasks.status, filters.status as any));
     }
-    
+
     if (filters?.buddyId) {
       conditions.push(eq(schema.tasks.buddyId, filters.buddyId));
     }
-    
-    const baseQuery = db.select().from(schema.tasks);
-    
-    const query = conditions.length > 0 
-      ? baseQuery.where(conditions.length === 1 ? conditions[0] : and(...conditions))
-      : baseQuery;
-    
-    return query.orderBy(desc(schema.tasks.createdAt));
+
+    // Query with JOINs to get mentor and buddy details
+    const tasks = await db.select({
+      id: schema.tasks.id,
+      title: schema.tasks.title,
+      description: schema.tasks.description,
+      status: schema.tasks.status,
+      dueDate: schema.tasks.dueDate,
+      createdAt: schema.tasks.createdAt,
+      buddyId: schema.tasks.buddyId,
+      mentorId: schema.tasks.mentorId,
+      // Buddy details from users table (via buddies join)
+      buddyName: schema.users.name,
+      buddyEmail: schema.users.email,
+    })
+    .from(schema.tasks)
+    .leftJoin(schema.buddies, eq(schema.tasks.buddyId, schema.buddies.id))
+    .leftJoin(schema.users, eq(schema.buddies.userId, schema.users.id))
+    .where(conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : and(...conditions)) : sql`true`)
+    .orderBy(desc(schema.tasks.createdAt));
+
+    // Now fetch mentor names separately for each task
+    const tasksWithMentors = await Promise.all(
+      tasks.map(async (task: any) => {
+        if (task.mentorId) {
+          const mentorData = await db.select({
+            mentorName: schema.users.name,
+            mentorEmail: schema.users.email,
+          })
+          .from(schema.mentors)
+          .leftJoin(schema.users, eq(schema.mentors.userId, schema.users.id))
+          .where(eq(schema.mentors.id, task.mentorId))
+          .limit(1);
+
+          return {
+            ...task,
+            mentorName: mentorData[0]?.mentorName || 'Unknown',
+            buddy: {
+              name: task.buddyName || 'Unknown',
+              email: task.buddyEmail
+            },
+            mentor: {
+              name: mentorData[0]?.mentorName || 'Unknown',
+              email: mentorData[0]?.mentorEmail
+            }
+          };
+        }
+        return {
+          ...task,
+          mentorName: 'Unknown',
+          buddy: {
+            name: task.buddyName || 'Unknown',
+            email: task.buddyEmail
+          },
+          mentor: {
+            name: 'Unknown',
+            email: null
+          }
+        };
+      })
+    );
+
+    return tasksWithMentors;
   }
 
   async updateTask(id: string, updates: Partial<Task>): Promise<Task> {
