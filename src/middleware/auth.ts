@@ -16,8 +16,9 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
   console.log('[AUTH] authenticateToken called for:', req.method, req.path);
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-  
+
   console.log('[AUTH] Auth header present:', !!authHeader);
+  console.log('[AUTH] Auth header value:', authHeader);
   console.log('[AUTH] Token present:', !!token);
 
   if (!token) {

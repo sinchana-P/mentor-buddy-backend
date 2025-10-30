@@ -3,11 +3,14 @@ import { z } from 'zod';
 import { storage } from '../lib/storage.ts';
 import { insertBuddySchema, DomainRole } from '../shared/schema.ts';
 import { getDefaultTopicsForDomain } from '../config/defaultTopics.ts';
+import { canEditBuddyField, canUpdateBuddyProgress, permissionDeniedResponse } from '../config/permissions.ts';
+import { AuthRequest } from '../middleware/permissions.ts';
 
 // Validation schemas
 const createBuddySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters long"),
   email: z.string().email("Invalid email format"),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
   domainRole: z.enum(['frontend', 'backend', 'fullstack', 'devops', 'qa', 'hr']),
   assignedMentorId: z.string().uuid("Invalid mentor ID format").optional(), // Optional mentor ID
   topicIds: z.array(z.string()).optional() // Optional array of topic IDs
@@ -98,7 +101,7 @@ export const createBuddy = async (req: Request, res: Response) => {
     
     // Validate request body
     const validatedData = createBuddySchema.parse(req.body);
-    const { name, email, domainRole, assignedMentorId, topicIds } = validatedData;
+    const { name, email, password, domainRole, assignedMentorId, topicIds } = validatedData;
 
     try {
       // Create user first
@@ -112,6 +115,7 @@ export const createBuddy = async (req: Request, res: Response) => {
       const user = await storage.createUser({
         email,
         name,
+        password,
         role: 'buddy',
         domainRole: domainRole as DomainRole
       });
@@ -206,43 +210,87 @@ export const createBuddy = async (req: Request, res: Response) => {
   }
 };
 
-export const updateBuddy = async (req: Request, res: Response) => {
+export const updateBuddy = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     // Validate ID format
     if (!id || typeof id !== 'string') {
       return res.status(400).json({ message: "Invalid buddy ID" });
     }
 
-    console.log(`[PUT /api/buddies/${id}] Updating buddy:`, req.body);
-    
+    // Check authentication
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    console.log(`[PUT /api/buddies/${id}] Updating buddy:`, req.body, 'by user:', req.user.role);
+
     // Validate request body
     const validatedData = updateBuddySchema.parse(req.body);
-    
+
     // Check if there's actually data to update
     if (Object.keys(validatedData).length === 0) {
       return res.status(400).json({ message: "No update data provided" });
     }
-    
+
     // Get current buddy data
     const currentBuddy = await storage.getBuddyById(id);
     if (!currentBuddy) {
       return res.status(404).json({ message: "Buddy not found" });
     }
-    
+
     const { name, email, domainRole, status, assignedMentorId } = validatedData;
+    const userUpdates: any = {};
+    const buddyUpdates: any = {};
+
+    // Permission check for each field - only if the value has actually changed
+    if (name !== undefined && name !== currentBuddy.user.name) {
+      if (!canEditBuddyField(req.user.role, req.user.userId, currentBuddy.user.id, 'name')) {
+        console.log(`[PERMISSION DENIED] ${req.user.role} cannot edit buddy name`);
+        return res.status(403).json(permissionDeniedResponse('You do not have permission to edit buddy name'));
+      }
+      userUpdates.name = name;
+    }
+
+    // Email cannot be changed by anyone - but only check if it's actually being changed
+    if (email !== undefined && email !== currentBuddy.user.email) {
+      if (!canEditBuddyField(req.user.role, req.user.userId, currentBuddy.user.id, 'email')) {
+        console.log(`[PERMISSION DENIED] ${req.user.role} cannot edit buddy email`);
+        return res.status(403).json(permissionDeniedResponse('Email cannot be changed'));
+      }
+      userUpdates.email = email;
+    }
+
+    if (domainRole !== undefined && domainRole !== currentBuddy.user.domainRole) {
+      if (!canEditBuddyField(req.user.role, req.user.userId, currentBuddy.user.id, 'domainRole')) {
+        console.log(`[PERMISSION DENIED] ${req.user.role} cannot edit buddy domain role`);
+        return res.status(403).json(permissionDeniedResponse('You do not have permission to edit buddy domain role'));
+      }
+      userUpdates.domainRole = domainRole;
+    }
+
+    if (status !== undefined && status !== currentBuddy.status) {
+      if (!canEditBuddyField(req.user.role, req.user.userId, currentBuddy.user.id, 'status')) {
+        console.log(`[PERMISSION DENIED] ${req.user.role} cannot edit buddy status`);
+        return res.status(403).json(permissionDeniedResponse('You do not have permission to edit buddy status'));
+      }
+      buddyUpdates.status = status;
+    }
+
+    if (assignedMentorId !== undefined && assignedMentorId !== currentBuddy.assignedMentorId) {
+      if (!canEditBuddyField(req.user.role, req.user.userId, currentBuddy.user.id, 'assignedMentorId')) {
+        console.log(`[PERMISSION DENIED] ${req.user.role} cannot edit assigned mentor`);
+        return res.status(403).json(permissionDeniedResponse('You do not have permission to change assigned mentor'));
+      }
+      buddyUpdates.assignedMentorId = assignedMentorId;
+    }
 
     // Check if domain role is changing
     const isDomainRoleChanging = domainRole !== undefined && domainRole !== currentBuddy.user.domainRole;
 
-    // Update user info if provided
-    if (name || email || domainRole !== undefined) {
-      const userUpdates: any = {};
-      if (name) userUpdates.name = name;
-      if (email) userUpdates.email = email;
-      if (domainRole !== undefined) userUpdates.domainRole = domainRole;
-
+    // Update user info if any user fields were allowed
+    if (Object.keys(userUpdates).length > 0) {
       try {
         await storage.updateUser(currentBuddy.user.id, userUpdates);
       } catch (error: any) {
@@ -266,34 +314,30 @@ export const updateBuddy = async (req: Request, res: Response) => {
       console.log(`[PUT /api/buddies/${id}] Synced ${topicIds.length} topics for new domain role`);
     }
 
-    // Update buddy-specific info
-    const buddyUpdates: any = {};
-    if (status !== undefined) buddyUpdates.status = status;
-    if (assignedMentorId !== undefined) buddyUpdates.assignedMentorId = assignedMentorId;
-
+    // Update buddy-specific info if any buddy fields were allowed
     if (Object.keys(buddyUpdates).length > 0) {
       await storage.updateBuddy(id, buddyUpdates);
     }
-    
+
     // Return updated buddy with user info
     const fullBuddyData = await storage.getBuddyById(id);
     console.log(`[PUT /api/buddies/${id}] Buddy updated successfully`);
     res.json(fullBuddyData);
-    
+
   } catch (error: any) {
     console.error(`[PUT /api/buddies/${req.params.id}] Error updating buddy:`, error);
-    
+
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        message: "Invalid buddy data", 
-        errors: error.issues 
+      return res.status(400).json({
+        message: "Invalid buddy data",
+        errors: error.issues
       });
     }
-    
+
     if (error?.message === 'Buddy not found') {
       return res.status(404).json({ message: "Buddy not found" });
     }
-    
+
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -414,10 +458,10 @@ export const getBuddyProgress = async (req: Request, res: Response) => {
   }
 };
 
-export const updateBuddyProgress = async (req: Request, res: Response) => {
+export const updateBuddyProgress = async (req: AuthRequest, res: Response) => {
   try {
     const { buddyId, topicId } = req.params;
-    
+
     // Validate ID formats
     if (!buddyId || typeof buddyId !== 'string') {
       return res.status(400).json({ message: "Invalid buddy ID" });
@@ -426,25 +470,43 @@ export const updateBuddyProgress = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid topic ID" });
     }
 
-    console.log(`[PUT /api/buddies/${buddyId}/progress/${topicId}] Updating progress:`, req.body);
-    
+    // Check authentication
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    console.log(`[PUT /api/buddies/${buddyId}/progress/${topicId}] Updating progress by:`, req.user.role);
+
+    // Get buddy data to check assigned mentor
+    const buddy = await storage.getBuddyById(buddyId);
+    if (!buddy) {
+      return res.status(404).json({ message: "Buddy not found" });
+    }
+
+    // Check permission to update progress
+    const assignedMentorUserId = buddy.mentor?.userId; // Get mentor's user ID if assigned
+    if (!canUpdateBuddyProgress(req.user.role, req.user.userId, buddy.user.id, assignedMentorUserId)) {
+      console.log(`[PERMISSION DENIED] ${req.user.role} cannot update progress for buddy ${buddyId}`);
+      return res.status(403).json(permissionDeniedResponse('You do not have permission to update this buddy\'s progress'));
+    }
+
     // Validate request body
     const { checked } = updateProgressSchema.parse(req.body);
-    
+
     const progress = await storage.updateBuddyTopicProgress(buddyId, topicId, checked);
-    
+
     console.log(`[PUT /api/buddies/${buddyId}/progress/${topicId}] Progress updated successfully`);
     res.json(progress);
   } catch (error) {
     console.error(`[PUT /api/buddies/${req.params.buddyId}/progress/${req.params.topicId}] Error:`, error);
-    
+
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        message: "Invalid progress data", 
-        errors: error.issues 
+      return res.status(400).json({
+        message: "Invalid progress data",
+        errors: error.issues
       });
     }
-    
+
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -490,7 +552,7 @@ export const getBuddyTopics = async (req: Request, res: Response) => {
   }
 };
 
-export const updateBuddyTopicById = async (req: Request, res: Response) => {
+export const updateBuddyTopicById = async (req: AuthRequest, res: Response) => {
   try {
     const { topicId } = req.params;
 
@@ -499,7 +561,31 @@ export const updateBuddyTopicById = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid topic ID" });
     }
 
-    console.log(`[PATCH /api/buddy-topics/${topicId}] Updating buddy topic:`, req.body);
+    // Check authentication
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    console.log(`[PATCH /api/buddy-topics/${topicId}] Updating buddy topic by:`, req.user.role);
+
+    // Get the buddy topic to find which buddy it belongs to
+    const buddyTopic = await storage.getBuddyTopicById(topicId);
+    if (!buddyTopic) {
+      return res.status(404).json({ message: "Buddy topic not found" });
+    }
+
+    // Get buddy data to check assigned mentor
+    const buddy = await storage.getBuddyById(buddyTopic.buddyId);
+    if (!buddy) {
+      return res.status(404).json({ message: "Buddy not found" });
+    }
+
+    // Check permission to update progress
+    const assignedMentorUserId = buddy.mentor?.userId;
+    if (!canUpdateBuddyProgress(req.user.role, req.user.userId, buddy.user.id, assignedMentorUserId)) {
+      console.log(`[PERMISSION DENIED] ${req.user.role} cannot update buddy topic`);
+      return res.status(403).json(permissionDeniedResponse('You do not have permission to update this buddy topic'));
+    }
 
     // Validate request body
     const { checked } = updateProgressSchema.parse(req.body);

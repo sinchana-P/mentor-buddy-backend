@@ -6,6 +6,7 @@ export interface JwtPayload {
   email: string;
   role: 'manager' | 'mentor' | 'buddy';
   domainRole: string;
+  permissions: string[];
   iat?: number;
   exp?: number;
 }

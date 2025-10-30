@@ -7,6 +7,7 @@ import { insertMentorSchema, insertUserSchema, DomainRole } from '../shared/sche
 const createMentorSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters long"),
   email: z.string().email("Invalid email format"),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
   domainRole: z.enum(['frontend', 'backend', 'devops', 'qa', 'hr']),
   expertise: z.string().optional().default(''),
   experience: z.string().optional().default('')
@@ -99,20 +100,21 @@ export const createMentor = async (req: Request, res: Response) => {
     
     // Validate request body
     const validatedData = createMentorSchema.parse(req.body);
-    const { name, email, domainRole, expertise, experience } = validatedData;
-    
+    const { name, email, password, domainRole, expertise, experience } = validatedData;
+
     try {
       // Create user first
-      console.log('[POST /api/mentors] Creating user with data:', { 
-        email, 
-        name, 
-        role: 'mentor', 
-        domainRole 
+      console.log('[POST /api/mentors] Creating user with data:', {
+        email,
+        name,
+        role: 'mentor',
+        domainRole
       });
-      
+
       const user = await storage.createUser({
         email,
         name,
+        password,
         role: 'mentor',
         domainRole: domainRole as DomainRole
       });

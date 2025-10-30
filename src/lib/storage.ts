@@ -1,6 +1,7 @@
 import { eq, and, like, desc, asc, sql, ilike, inArray } from 'drizzle-orm';
 import { db } from './database.ts';
 import * as schema from '../shared/schema.ts';
+import bcrypt from 'bcryptjs';
 import {
   type User,
   type InsertUser,
@@ -72,6 +73,7 @@ export interface IStorage {
   // Buddy Topics (buddy-specific topics system)
   createBuddyTopics(buddyId: string, topicIds: string[]): Promise<BuddyTopic[]>;
   getBuddyTopics(buddyId: string): Promise<any>;
+  getBuddyTopicById(topicId: string): Promise<BuddyTopic | undefined>;
   updateBuddyTopic(topicId: string, checked: boolean): Promise<BuddyTopic>;
   deleteBuddyTopic(topicId: string): Promise<void>;
   deleteAllBuddyTopics(buddyId: string): Promise<void>;
@@ -158,24 +160,27 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     try {
-      // Create user data with all required fields including password
+      // Hash the password before storing (using 12 salt rounds to match password.ts)
+      const hashedPassword = await bcrypt.hash(insertUser.password, 12);
+
+      // Create user data with all required fields including hashed password
       const userData = {
         email: insertUser.email,
         name: insertUser.name,
-        password: insertUser.password,
+        password: hashedPassword,
         role: insertUser.role,
         domainRole: insertUser.domainRole,
         avatarUrl: insertUser.avatarUrl,
         isActive: insertUser.isActive !== undefined ? insertUser.isActive : true,
         lastLoginAt: insertUser.lastLoginAt || null
       };
-      
+
       const result = await db.insert(schema.users).values(userData).returning();
-      
+
       if (result.length === 0) {
         throw new Error('Failed to create user');
       }
-      
+
       return result[0];
     } catch (error) {
       console.error('createUser error:', error);
@@ -824,6 +829,11 @@ export class DatabaseStorage implements IStorage {
       : 0;
 
     return { topics: buddyTopicsWithDetails, percentage };
+  }
+
+  async getBuddyTopicById(topicId: string): Promise<BuddyTopic | undefined> {
+    const result = await db.select().from(schema.buddyTopics).where(eq(schema.buddyTopics.id, topicId)).limit(1);
+    return result[0];
   }
 
   async bulkUpdateBuddyTopics(buddyId: string, topicIds: string[]): Promise<BuddyTopic[]> {

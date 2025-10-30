@@ -360,7 +360,7 @@ app.get("/api/mentors/:id/buddies", authenticateToken, requireMentor, async (req
 });
 
 // Buddy routes
-app.get("/api/buddies", authenticateToken, requireMentor, async (req, res, next) => {
+app.get("/api/buddies", authenticateToken, requireBuddy, async (req, res, next) => {
   try {
     const { getAllBuddies } = await import("./controllers/buddyController.ts");
     await getAllBuddies(req, res, next);
@@ -792,8 +792,8 @@ app.delete("/api/settings/account", authenticateToken, async (req, res, next) =>
   }
 });
 
-// Dashboard routes (Manager+ access)
-app.get("/api/dashboard/stats", authenticateToken, requireMentor, async (req, res) => {
+// Dashboard routes (accessible to all authenticated users)
+app.get("/api/dashboard/stats", authenticateToken, requireBuddy, async (req, res) => {
   try {
     console.log('[GET /api/dashboard/stats] Fetching dashboard statistics...');
     const { storage } = await import("./lib/storage.ts");
@@ -807,7 +807,7 @@ app.get("/api/dashboard/stats", authenticateToken, requireMentor, async (req, re
   }
 });
 
-app.get("/api/dashboard/activity", authenticateToken, requireMentor, async (req, res) => {
+app.get("/api/dashboard/activity", authenticateToken, requireBuddy, async (req, res) => {
   try {
     console.log('[GET /api/dashboard/activity] Fetching recent activity...');
     const { storage } = await import("./lib/storage.ts");

@@ -5,6 +5,7 @@ import { generateToken } from '../lib/jwt.ts';
 import { hashPassword, comparePassword, validatePasswordStrength } from '../lib/password.ts';
 import { tokenBlacklist } from '../lib/tokenBlacklist.ts';
 import { type DomainRole, type InsertUser } from '../shared/schema.ts';
+import { ROLE_PERMISSIONS } from '../config/permissions.ts';
 
 // Use real database storage for authentication
 // const userStorage = storage; // Temporarily comment out to test
@@ -33,7 +34,7 @@ const changePasswordSchema = z.object({
 });
 
 // Helper function to create user response (without password)
-const createUserResponse = (user: any) => ({
+const createUserResponse = (user: any, permissions: string[]) => ({
   id: user.id,
   email: user.email,
   name: user.name,
@@ -41,6 +42,7 @@ const createUserResponse = (user: any) => ({
   domainRole: user.domainRole,
   avatarUrl: user.avatarUrl,
   isActive: user.isActive,
+  permissions: permissions,
   lastLoginAt: user.lastLoginAt,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt
@@ -96,17 +98,22 @@ export const login = async (req: Request, res: Response) => {
         console.log('[POST /api/auth/login] Invalid password for:', email);
         return res.status(401).json({ message: "Invalid email or password" });
       }
-      
-      // Generate JWT token
+
+      // Get permissions based on user role
+      const userRole = user.role as 'manager' | 'mentor' | 'buddy';
+      const permissions = ROLE_PERMISSIONS[userRole] ? [...ROLE_PERMISSIONS[userRole]] : [];
+
+      // Generate JWT token with permissions
       const token = generateToken({
         userId: user.id,
         email: user.email,
-        role: user.role as 'manager' | 'mentor' | 'buddy',
-        domainRole: user.domain_role
+        role: userRole,
+        domainRole: user.domain_role,
+        permissions
       });
-      
-      console.log('[POST /api/auth/login] Login successful for:', email, 'Role:', user.role);
-      
+
+      console.log('[POST /api/auth/login] Login successful for:', email, 'Role:', user.role, 'Permissions:', permissions.length);
+
       res.json({
         message: "Login successful",
         token,
@@ -118,6 +125,7 @@ export const login = async (req: Request, res: Response) => {
           domainRole: user.domain_role,
           avatarUrl: user.avatar_url,
           isActive: user.is_active,
+          permissions: permissions,
           lastLoginAt: user.last_login_at,
           createdAt: user.created_at,
           updatedAt: user.updated_at
@@ -216,17 +224,22 @@ export const register = async (req: Request, res: Response) => {
       }
       
       const [newUser] = await createUserResponse.json() as any[];
-      
-      // Generate JWT token
+
+      // Get permissions based on user role
+      const userRole = newUser.role as 'manager' | 'mentor' | 'buddy';
+      const permissions = ROLE_PERMISSIONS[userRole] ? [...ROLE_PERMISSIONS[userRole]] : [];
+
+      // Generate JWT token with permissions
       const token = generateToken({
         userId: newUser.id,
         email: newUser.email,
-        role: newUser.role as 'manager' | 'mentor' | 'buddy',
-        domainRole: newUser.domain_role
+        role: userRole,
+        domainRole: newUser.domain_role,
+        permissions
       });
-      
-      console.log('[POST /api/auth/register] Registration successful for:', email, 'Role:', role);
-      
+
+      console.log('[POST /api/auth/register] Registration successful for:', email, 'Role:', role, 'Permissions assigned:', permissions.length);
+
       res.status(201).json({
         message: "Registration successful",
         token,
@@ -238,6 +251,7 @@ export const register = async (req: Request, res: Response) => {
           domainRole: newUser.domain_role,
           avatarUrl: newUser.avatar_url,
           isActive: newUser.is_active,
+          permissions: permissions,
           lastLoginAt: newUser.last_login_at,
           createdAt: newUser.created_at,
           updatedAt: newUser.updated_at
@@ -267,17 +281,57 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    
+
     console.log('[GET /api/auth/me] Getting current user:', req.user.userId);
-    
-    // Return user data from token (already verified)
+
+    // Fetch full user data from database
+    const { storage } = await import('../lib/storage.ts');
+    const userFromDb = await storage.getUser(req.user.userId);
+
+    if (!userFromDb) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Get permissions based on user role
+    const userRole = req.user.role as 'manager' | 'mentor' | 'buddy';
+    const permissions = ROLE_PERMISSIONS[userRole] ? [...ROLE_PERMISSIONS[userRole]] : [];
+
+    // Fetch profile ID for mentors and buddies
+    let profileId: string | undefined;
+    if (userRole === 'mentor') {
+      console.log('[GET /api/auth/me] Fetching mentor for email:', req.user.email);
+      const mentor = await storage.getMentors({ search: req.user.email });
+      console.log('[GET /api/auth/me] Mentor found:', mentor && mentor.length > 0 ? mentor[0].id : 'none');
+      if (mentor && mentor.length > 0) {
+        profileId = mentor[0].id;
+      }
+    } else if (userRole === 'buddy') {
+      console.log('[GET /api/auth/me] Fetching buddy for email:', req.user.email);
+      const buddies = await storage.getAllBuddies({ search: req.user.email });
+      console.log('[GET /api/auth/me] Buddy found:', buddies && buddies.length > 0 ? buddies[0].id : 'none');
+      if (buddies && buddies.length > 0) {
+        profileId = buddies[0].id;
+      }
+    }
+
+    console.log('[GET /api/auth/me] Final profileId:', profileId);
+
+    // Return user data with name from database
     res.json({
       message: "User retrieved successfully",
       user: {
-        id: req.user.userId,
-        email: req.user.email,
-        role: req.user.role,
-        domainRole: req.user.domainRole
+        id: userFromDb.id,
+        name: userFromDb.name,
+        email: userFromDb.email,
+        role: userFromDb.role,
+        domainRole: userFromDb.domainRole,
+        avatarUrl: userFromDb.avatarUrl,
+        isActive: userFromDb.isActive,
+        lastLoginAt: userFromDb.lastLoginAt,
+        createdAt: userFromDb.createdAt,
+        updatedAt: userFromDb.updatedAt,
+        permissions: permissions,
+        profileId: profileId // mentor ID or buddy ID
       }
     });
   } catch (error) {
