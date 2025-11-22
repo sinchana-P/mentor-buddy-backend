@@ -1,4 +1,5 @@
 services:
+  # Main Backend API
   - type: web
     name: mentor-buddy-backend
     env: node
@@ -16,3 +17,17 @@ services:
         value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZieG1zeGpicmZmZ2Vqd2dza2VnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0OTM1NTMsImV4cCI6MjA2OTA2OTU1M30.o9yQ-9YlNuEHwLBokKodHkB2GFR8NbUkRtGzDfEWOik
       - key: CORS_ORIGIN
         value: https://mentor-buddy.vercel.app,https://mentor-buddy-panel.vercel.app
+
+  # Cron Job - Keep Services Alive
+  - type: cron
+    name: mentor-buddy-keepalive
+    env: docker
+    schedule: "*/14 * * * *"
+    dockerfilePath: ./Dockerfile.keepalive
+    envVars:
+      - key: BACKEND_URL
+        value: https://mentor-buddy-backend.onrender.com
+      - key: FRONTEND_URL_1
+        value: https://mentor-buddy.vercel.app
+      - key: FRONTEND_URL_2
+        value: https://mentor-buddy-panel.vercel.app

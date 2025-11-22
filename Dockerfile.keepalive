@@ -1,0 +1,12 @@
+# Lightweight Alpine Linux with curl
+FROM alpine:latest
+
+# Install curl
+RUN apk add --no-cache curl bash
+
+# Copy keep-alive script
+COPY keep-alive.sh /keep-alive.sh
+RUN chmod +x /keep-alive.sh
+
+# Run the keep-alive script
+CMD ["/keep-alive.sh"]
