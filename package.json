@@ -7,6 +7,7 @@
     "dev": "tsx src/index.ts",
     "build": "esbuild src/index.ts --bundle --platform=node --format=cjs --outfile=dist/index.js --packages=external --sourcemap",
     "start": "node dist/index.js",
+    "postinstall": "node -e \"console.log('Dependencies installed successfully')\"",
     "dev:watch": "nodemon --exec tsx src/index.ts",
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
@@ -61,5 +62,8 @@
     "nodemon": "^3.1.10",
     "tsc-alias": "^1.8.16",
     "typescript": "^5.9.2"
+  },
+  "optionalDependencies": {
+    "@esbuild/linux-x64": "^0.27.0"
   }
 }
