@@ -528,6 +528,17 @@ app.post("/api/buddies/:id/assign-mentor", authenticateToken, requireManager, as
   }
 });
 
+// Alias endpoint for frontend compatibility - PATCH /api/buddies/:id/assign
+app.patch("/api/buddies/:id/assign", authenticateToken, requireManager, async (req, res, next) => {
+  try {
+    const { assignBuddyToMentor } = await import("./controllers/buddyController.ts");
+    await assignBuddyToMentor(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Assign buddy to mentor route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Update buddy topic by ID (separate route pattern)
 app.patch("/api/buddy-topics/:topicId", authenticateToken, requireBuddy, async (req, res, next) => {
   try {
@@ -682,12 +693,363 @@ app.delete("/api/resources/:id", authenticateToken, requireMentor, async (req, r
 });
 
 // TEMPORARILY COMMENTED OUT - Database connection issues
-// Curriculum routes
+// Curriculum routes (OLD - replaced by Curriculum Management System below)
 // app.get("/api/curriculum", authenticateToken, requireBuddy, curriculumController.getAllCurriculum); // All can view
 // app.get("/api/curriculum/:id", authenticateToken, requireBuddy, curriculumController.getCurriculumById);
 // app.post("/api/curriculum", authenticateToken, requireMentor, curriculumController.createCurriculum); // Mentor+ can create
 // app.put("/api/curriculum/:id", authenticateToken, requireMentor, curriculumController.updateCurriculum);
 // app.delete("/api/curriculum/:id", authenticateToken, requireMentor, curriculumController.deleteCurriculum);
+
+// ═══════════════════════════════════════════════════════════
+// CURRICULUM MANAGEMENT SYSTEM (NEW)
+// ═══════════════════════════════════════════════════════════
+
+// Curriculums (Admin: Managers & Mentors)
+app.get("/api/curriculums", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getAllCurriculums } = await import("./controllers/curriculumManagementController.ts");
+    await getAllCurriculums(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get curriculums route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/curriculums/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getCurriculumById } = await import("./controllers/curriculumManagementController.ts");
+    await getCurriculumById(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get curriculum by ID route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/curriculums", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { createCurriculum } = await import("./controllers/curriculumManagementController.ts");
+    await createCurriculum(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Create curriculum route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/curriculums/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { updateCurriculum } = await import("./controllers/curriculumManagementController.ts");
+    await updateCurriculum(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update curriculum route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete("/api/curriculums/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { deleteCurriculum } = await import("./controllers/curriculumManagementController.ts");
+    await deleteCurriculum(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Delete curriculum route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/curriculums/:id/publish", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { publishCurriculum } = await import("./controllers/curriculumManagementController.ts");
+    await publishCurriculum(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Publish curriculum route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Curriculum Weeks (Admin only)
+app.get("/api/curriculums/:id/weeks", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getCurriculumWeeks } = await import("./controllers/curriculumManagementController.ts");
+    await getCurriculumWeeks(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get curriculum weeks route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/curriculums/:id/weeks", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { createCurriculumWeek } = await import("./controllers/curriculumManagementController.ts");
+    await createCurriculumWeek(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Create curriculum week route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/weeks/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { updateCurriculumWeek } = await import("./controllers/curriculumManagementController.ts");
+    await updateCurriculumWeek(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update curriculum week route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete("/api/weeks/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { deleteCurriculumWeek } = await import("./controllers/curriculumManagementController.ts");
+    await deleteCurriculumWeek(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Delete curriculum week route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Task Templates (Admin only)
+app.get("/api/weeks/:id/tasks", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getWeekTasks } = await import("./controllers/curriculumManagementController.ts");
+    await getWeekTasks(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get week tasks route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/task-templates/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getTaskTemplateById } = await import("./controllers/curriculumManagementController.ts");
+    await getTaskTemplateById(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get task template by ID route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/weeks/:id/tasks", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { createTaskTemplate } = await import("./controllers/curriculumManagementController.ts");
+    await createTaskTemplate(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Create task template route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/task-templates/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { updateTaskTemplate } = await import("./controllers/curriculumManagementController.ts");
+    await updateTaskTemplate(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update task template route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete("/api/task-templates/:id", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { deleteTaskTemplate } = await import("./controllers/curriculumManagementController.ts");
+    await deleteTaskTemplate(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Delete task template route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// BUDDY CURRICULUM ROUTES
+// ═══════════════════════════════════════════════════════════
+
+app.get("/api/buddies/:id/curriculum", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getBuddyCurriculum } = await import("./controllers/curriculumManagementController.ts");
+    await getBuddyCurriculum(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get buddy curriculum route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/buddies/:id/assignments", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getBuddyAssignments } = await import("./controllers/curriculumManagementController.ts");
+    await getBuddyAssignments(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get buddy assignments route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// TASK ASSIGNMENT ROUTES
+// ═══════════════════════════════════════════════════════════
+
+app.get("/api/task-assignments/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getTaskAssignmentById } = await import("./controllers/submissionController.ts");
+    await getTaskAssignmentById(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get task assignment route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/task-assignments/:id/start", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { startTaskAssignment } = await import("./controllers/submissionController.ts");
+    await startTaskAssignment(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Start task assignment route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/task-assignments/:id/submit", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { submitTaskAssignment } = await import("./controllers/submissionController.ts");
+    await submitTaskAssignment(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Submit task assignment route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/task-assignments/:id/submissions", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getTaskAssignmentSubmissions } = await import("./controllers/submissionController.ts");
+    await getTaskAssignmentSubmissions(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get task assignment submissions route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// SUBMISSION ROUTES
+// ═══════════════════════════════════════════════════════════
+
+app.get("/api/submissions/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getSubmissionById } = await import("./controllers/submissionController.ts");
+    await getSubmissionById(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get submission route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/submissions/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { updateSubmission } = await import("./controllers/submissionController.ts");
+    await updateSubmission(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update submission route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete("/api/submissions/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { deleteSubmission } = await import("./controllers/submissionController.ts");
+    await deleteSubmission(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Delete submission route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// REVIEW ROUTES (Mentor/Manager)
+// ═══════════════════════════════════════════════════════════
+
+app.post("/api/submissions/:id/approve", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { approveSubmission } = await import("./controllers/submissionController.ts");
+    await approveSubmission(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Approve submission route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/submissions/:id/request-revision", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { requestRevision } = await import("./controllers/submissionController.ts");
+    await requestRevision(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Request revision route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post("/api/submissions/:id/reject", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { rejectSubmission } = await import("./controllers/submissionController.ts");
+    await rejectSubmission(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Reject submission route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// FEEDBACK ROUTES
+// ═══════════════════════════════════════════════════════════
+
+app.post("/api/submissions/:id/feedback", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { addFeedback } = await import("./controllers/submissionController.ts");
+    await addFeedback(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Add feedback route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/submissions/:id/feedback", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { getSubmissionFeedback } = await import("./controllers/submissionController.ts");
+    await getSubmissionFeedback(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get submission feedback route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/feedback/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { updateFeedback } = await import("./controllers/submissionController.ts");
+    await updateFeedback(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Update feedback route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete("/api/feedback/:id", authenticateToken, requireBuddy, async (req, res, next) => {
+  try {
+    const { deleteFeedback } = await import("./controllers/submissionController.ts");
+    await deleteFeedback(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Delete feedback route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// MENTOR REVIEW QUEUE
+// ═══════════════════════════════════════════════════════════
+
+app.get("/api/mentors/:id/review-queue", authenticateToken, requireMentor, async (req, res, next) => {
+  try {
+    const { getMentorReviewQueue } = await import("./controllers/submissionController.ts");
+    await getMentorReviewQueue(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Get mentor review queue route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Topic routes
 app.get("/api/topics", authenticateToken, requireBuddy, async (req, res, next) => {

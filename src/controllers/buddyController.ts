@@ -13,7 +13,8 @@ const createBuddySchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters long"),
   domainRole: z.enum(['frontend', 'backend', 'fullstack', 'devops', 'qa', 'hr']),
   assignedMentorId: z.string().uuid("Invalid mentor ID format").optional(), // Optional mentor ID
-  topicIds: z.array(z.string()).optional() // Optional array of topic IDs
+  topicIds: z.array(z.string()).optional(), // Optional array of topic IDs
+  curriculumId: z.string().uuid("Invalid curriculum ID format").optional() // Optional curriculum ID for manual assignment
 });
 
 const updateBuddySchema = z.object({
@@ -98,10 +99,10 @@ export const getBuddyById = async (req: Request, res: Response) => {
 export const createBuddy = async (req: Request, res: Response) => {
   try {
     console.log('[POST /api/buddies] Creating new buddy:', req.body);
-    
+
     // Validate request body
     const validatedData = createBuddySchema.parse(req.body);
-    const { name, email, password, domainRole, assignedMentorId, topicIds } = validatedData;
+    const { name, email, password, domainRole, assignedMentorId, topicIds, curriculumId } = validatedData;
 
     try {
       // Create user first
@@ -159,6 +160,26 @@ export const createBuddy = async (req: Request, res: Response) => {
         console.warn('[POST /api/buddies] No topics to assign for domain:', domainRole);
       }
 
+      // 🚀 ASSIGN CURRICULUM - either by ID or auto-assign based on domain role
+      const { autoAssignCurriculum, assignCurriculumById } = await import('../lib/autoAssignment.js');
+      let assignmentResult;
+
+      if (curriculumId) {
+        // Manual curriculum assignment by ID
+        console.log('[POST /api/buddies] Assigning curriculum by ID:', curriculumId);
+        assignmentResult = await assignCurriculumById(buddy.id, curriculumId);
+      } else {
+        // Auto-assign curriculum based on domain role
+        console.log('[POST /api/buddies] Auto-assigning curriculum for domain:', domainRole);
+        assignmentResult = await autoAssignCurriculum(buddy.id, domainRole);
+      }
+
+      if (assignmentResult.success) {
+        console.log('[POST /api/buddies] ✅ Curriculum assigned:', assignmentResult.curriculum?.name);
+      } else {
+        console.warn('[POST /api/buddies] ⚠️ Curriculum assignment failed:', assignmentResult.message);
+      }
+
       res.status(201).json({
         id: buddy.id,
         user: {
@@ -170,7 +191,18 @@ export const createBuddy = async (req: Request, res: Response) => {
         mentor: null,
         domainRole: user.domainRole,
         status: buddy.status,
-        startDate: buddy.createdAt
+        startDate: buddy.createdAt,
+        curriculum: assignmentResult.success ? {
+          enrolled: true,
+          curriculumId: assignmentResult.curriculum?.id,
+          curriculumName: assignmentResult.curriculum?.name,
+          totalWeeks: assignmentResult.curriculum?.totalWeeks,
+          totalTasks: assignmentResult.totalTasks,
+          message: assignmentResult.message
+        } : {
+          enrolled: false,
+          message: assignmentResult.message
+        }
       });
       
     } catch (validationError: any) {
