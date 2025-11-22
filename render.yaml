@@ -16,7 +16,7 @@ services:
       - key: SUPABASE_ANON_KEY
         value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZieG1zeGpicmZmZ2Vqd2dza2VnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0OTM1NTMsImV4cCI6MjA2OTA2OTU1M30.o9yQ-9YlNuEHwLBokKodHkB2GFR8NbUkRtGzDfEWOik
       - key: CORS_ORIGIN
-        value: https://mentor-buddy.vercel.app,https://mentor-buddy-panel.vercel.app
+        value: https://mentor-buddy.vercel.app
 
   # Cron Job - Keep Services Alive
   - type: cron
@@ -27,5 +27,5 @@ services:
     envVars:
       - key: BACKEND_URL
         value: https://mentor-buddy-backend.onrender.com
-      - key: FRONTEND_URL_1
+      - key: FRONTEND_URL
         value: https://mentor-buddy.vercel.app
