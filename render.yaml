@@ -29,5 +29,3 @@ services:
         value: https://mentor-buddy-backend.onrender.com
       - key: FRONTEND_URL_1
         value: https://mentor-buddy.vercel.app
-      - key: FRONTEND_URL_2
-        value: https://mentor-buddy-panel.vercel.app

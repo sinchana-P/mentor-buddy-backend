@@ -370,6 +370,11 @@
   resolved "https://registry.npmjs.org/@esbuild/linux-s390x/-/linux-s390x-0.27.0.tgz"
   integrity sha512-hPlRWR4eIDDEci953RI1BLZitgi5uqcsjKMxwYfmi4LcwyWo2IcRP+lThVnKjNtk90pLS8nKdroXYOqW+QQH+w==
 
+"@esbuild/linux-x64@^0.27.0", "@esbuild/linux-x64@0.27.0":
+  version "0.27.0"
+  resolved "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.27.0.tgz"
+  integrity sha512-1hBWx4OUJE2cab++aVZ7pObD6s+DK4mPGpemtnAORBvb5l/g5xFGk0vc0PjSkrDs0XaXj9yyob3d14XqvnQ4gw==
+
 "@esbuild/linux-x64@0.18.20":
   version "0.18.20"
   resolved "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.18.20.tgz"
@@ -384,11 +389,6 @@
   version "0.25.9"
   resolved "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.25.9.tgz"
   integrity sha512-iSwByxzRe48YVkmpbgoxVzn76BXjlYFXC7NvLYq+b+kDjyyk30J0JY47DIn8z1MO3K0oSl9fZoRmZPQI4Hklzg==
-
-"@esbuild/linux-x64@0.27.0":
-  version "0.27.0"
-  resolved "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.27.0.tgz"
-  integrity sha512-1hBWx4OUJE2cab++aVZ7pObD6s+DK4mPGpemtnAORBvb5l/g5xFGk0vc0PjSkrDs0XaXj9yyob3d14XqvnQ4gw==
 
 "@esbuild/netbsd-arm64@0.25.9":
   version "0.25.9"
