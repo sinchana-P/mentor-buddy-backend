@@ -568,87 +568,6 @@ app.patch("/api/buddy-topics/:topicId", authenticateToken, requireBuddy, async (
   }
 });
 
-// Task routes
-app.get("/api/tasks", authenticateToken, requireBuddy, async (req, res, next) => {
-  try {
-    const { getAllTasks } = await import("./controllers/taskController.ts");
-    await getAllTasks(req, res, next);
-  } catch (error) {
-    console.error('[ERROR] Get all tasks route error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.get("/api/tasks/:id", authenticateToken, requireBuddy, async (req, res, next) => {
-  try {
-    const { getTaskById } = await import("./controllers/taskController.ts");
-    await getTaskById(req, res, next);
-  } catch (error) {
-    console.error('[ERROR] Get task by ID route error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.post("/api/tasks", authenticateToken, requireMentor, async (req, res, next) => {
-  try {
-    const { createTask } = await import("./controllers/taskController.ts");
-    await createTask(req, res, next);
-  } catch (error) {
-    console.error('[ERROR] Create task route error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.put("/api/tasks/:id", authenticateToken, requireMentor, async (req, res, next) => {
-  try {
-    const { updateTask } = await import("./controllers/taskController.ts");
-    await updateTask(req, res, next);
-  } catch (error) {
-    console.error('[ERROR] Update task route error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.patch("/api/tasks/:id", authenticateToken, requireMentor, async (req, res, next) => {
-  try {
-    const { updateTask } = await import("./controllers/taskController.ts");
-    await updateTask(req, res, next);
-  } catch (error) {
-    console.error('[ERROR] Update task route error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.delete("/api/tasks/:id", authenticateToken, requireMentor, async (req, res, next) => {
-  try {
-    const { deleteTask } = await import("./controllers/taskController.ts");
-    await deleteTask(req, res, next);
-  } catch (error) {
-    console.error('[ERROR] Delete task route error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.get("/api/tasks/:id/submissions", authenticateToken, requireBuddy, async (req, res, next) => {
-  try {
-    const { getTaskSubmissions } = await import("./controllers/taskController.ts");
-    await getTaskSubmissions(req, res, next);
-  } catch (error) {
-    console.error('[ERROR] Get task submissions route error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.post("/api/tasks/:id/submissions", authenticateToken, requireBuddy, async (req, res, next) => {
-  try {
-    const { createSubmission } = await import("./controllers/taskController.ts");
-    await createSubmission(req, res, next);
-  } catch (error) {
-    console.error('[ERROR] Create submission route error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
 // Resource routes
 app.get("/api/resources", authenticateToken, requireBuddy, async (req, res, next) => {
   try {
@@ -779,6 +698,17 @@ app.post("/api/curriculums/:id/publish", authenticateToken, requireMentor, async
     await publishCurriculum(req, res, next);
   } catch (error) {
     console.error('[ERROR] Publish curriculum route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Get all submissions for a curriculum (Mentor/Manager view)
+app.get("/api/curriculums/:id/submissions", authenticateToken, requireMentor, async (req, res) => {
+  try {
+    const { getCurriculumSubmissions } = await import("./controllers/curriculumManagementController.ts");
+    await getCurriculumSubmissions(req, res);
+  } catch (error) {
+    console.error('[ERROR] Get curriculum submissions route error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

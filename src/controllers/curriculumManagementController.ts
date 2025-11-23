@@ -7,6 +7,11 @@ import {
   buddyCurriculums,
   buddyWeekProgress,
   taskAssignments,
+  newSubmissions,
+  submissionResources,
+  submissionFeedback,
+  buddies,
+  users,
   insertCurriculumSchema2,
   insertCurriculumWeekSchema,
   insertTaskTemplateSchema,
@@ -454,5 +459,131 @@ export async function getBuddyAssignments(req: Request, res: Response) {
   } catch (error) {
     console.error('Error fetching buddy assignments:', error);
     res.status(500).json({ error: 'Failed to fetch buddy assignments' });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// CURRICULUM SUBMISSIONS (Manager/Mentor view all buddy submissions)
+// ═══════════════════════════════════════════════════════════
+
+export async function getCurriculumSubmissions(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+
+    // Get all weeks for this curriculum
+    const weeks = await db
+      .select()
+      .from(curriculumWeeks)
+      .where(eq(curriculumWeeks.curriculumId, id))
+      .orderBy(curriculumWeeks.displayOrder);
+
+    // Get all task templates for these weeks
+    const weekIds = weeks.map(w => w.id);
+    const tasks = await db
+      .select()
+      .from(taskTemplates)
+      .where(eq(taskTemplates.curriculumWeekId, weekIds[0]))
+      .orderBy(taskTemplates.displayOrder);
+
+    // For each week, get task templates
+    const weeksWithTasks = await Promise.all(
+      weeks.map(async (week) => {
+        const weekTasks = await db
+          .select()
+          .from(taskTemplates)
+          .where(eq(taskTemplates.curriculumWeekId, week.id))
+          .orderBy(taskTemplates.displayOrder);
+
+        // For each task template, get all assignments and submissions
+        const tasksWithSubmissions = await Promise.all(
+          weekTasks.map(async (task) => {
+            // Get all task assignments for this task template
+            const assignments = await db
+              .select({
+                assignment: taskAssignments,
+                buddy: buddies,
+                user: users,
+              })
+              .from(taskAssignments)
+              .leftJoin(buddies, eq(taskAssignments.buddyId, buddies.id))
+              .leftJoin(users, eq(buddies.userId, users.id))
+              .where(eq(taskAssignments.taskTemplateId, task.id));
+
+            // For each assignment, get all submissions
+            const assignmentsWithSubmissions = await Promise.all(
+              assignments.map(async ({ assignment, buddy, user }) => {
+                const submissions = await db
+                  .select({
+                    submission: newSubmissions,
+                  })
+                  .from(newSubmissions)
+                  .where(eq(newSubmissions.taskAssignmentId, assignment.id))
+                  .orderBy(desc(newSubmissions.version));
+
+                // Get resources and feedback for each submission
+                const submissionsWithDetails = await Promise.all(
+                  submissions.map(async ({ submission }) => {
+                    const resources = await db
+                      .select()
+                      .from(submissionResources)
+                      .where(eq(submissionResources.submissionId, submission.id))
+                      .orderBy(submissionResources.displayOrder);
+
+                    const feedback = await db
+                      .select()
+                      .from(submissionFeedback)
+                      .where(eq(submissionFeedback.submissionId, submission.id))
+                      .orderBy(submissionFeedback.createdAt);
+
+                    return {
+                      ...submission,
+                      resources,
+                      feedbackCount: feedback.length,
+                    };
+                  })
+                );
+
+                return {
+                  assignment,
+                  buddy: buddy ? {
+                    id: buddy.id,
+                    name: user?.name || 'Unknown',
+                    email: user?.email || '',
+                    avatarUrl: user?.avatarUrl,
+                    domainRole: buddy.domainRole,
+                    status: buddy.status,
+                  } : null,
+                  submissions: submissionsWithDetails,
+                  latestSubmission: submissionsWithDetails[0] || null,
+                };
+              })
+            );
+
+            return {
+              taskTemplate: task,
+              buddySubmissions: assignmentsWithSubmissions,
+              totalBuddies: assignments.length,
+              submittedCount: assignmentsWithSubmissions.filter(a => a.submissions.length > 0).length,
+              completedCount: assignmentsWithSubmissions.filter(
+                a => a.assignment.status === 'completed'
+              ).length,
+            };
+          })
+        );
+
+        return {
+          week,
+          tasks: tasksWithSubmissions,
+        };
+      })
+    );
+
+    res.json({
+      curriculumId: id,
+      weeks: weeksWithTasks,
+    });
+  } catch (error) {
+    console.error('Error fetching curriculum submissions:', error);
+    res.status(500).json({ error: 'Failed to fetch curriculum submissions' });
   }
 }
