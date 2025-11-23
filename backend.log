@@ -1,0 +1,580 @@
+[dotenv@17.2.2] injecting env (9) from .env -- tip: ⚙️  override existing env vars with { override: true }
+🚀 Starting Mentor Buddy Backend...
+✅ Server is running on port 3000
+🔗 Environment: development
+🌐 CORS Origins: ["http://localhost:5173","http://localhost:5174","http://localhost:5175"]
+[AUTH] authenticateToken called for: POST /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd/submit
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+🔗 Connecting to database: postgresql://postgres.bgbkqswuuvyuhtrosdkd:***@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres
+🔄 Creating database client (lazy)...
+Error submitting task assignment: DrizzleQueryError: Failed query: insert into "submission_resources" ("id", "submission_id", "type", "label", "url", "filename", "filesize", "display_order", "created_at") values (default, $1, $2, $3, $4, $5, $6, $7, default)
+params: dc9fbd1c-b3df-44a7-84ba-c76f74152af3,github,Source Code,https://github.com/sinchana-P/eye-desk,,,0
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async submitTaskAssignment (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/submissionController.ts:149:7)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:929:5) {
+  query: 'insert into "submission_resources" ("id", "submission_id", "type", "label", "url", "filename", "filesize", "display_order", "created_at") values (default, $1, $2, $3, $4, $5, $6, $7, default)',
+  params: [
+    'dc9fbd1c-b3df-44a7-84ba-c76f74152af3',
+    'github',
+    'Source Code',
+    'https://github.com/sinchana-P/eye-desk',
+    null,
+    null,
+    0
+  ],
+  cause: PostgresError: insert or update on table "submission_resources" violates foreign key constraint "submission_resources_submission_id_fkey"
+      at ErrorResponse (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/connection.js:794:26)
+      at handle (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/connection.js:480:6)
+      at TLSSocket.data (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/connection.js:315:9)
+      at TLSSocket.emit (node:events:508:28)
+      at addChunk (node:internal/streams/readable:559:12)
+      at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+      at Readable.push (node:internal/streams/readable:390:5)
+      at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+      at new Query (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/query.js:35:9)
+      at sql.unsafe (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/index.js:121:21)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:53:27)
+      at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:71:18)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:52:18)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:51:19)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at PostgresJsPreparedQuery.execute (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:39:17)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/query-builders/insert.ts:428:27) {
+    severity_local: 'ERROR',
+    severity: 'ERROR',
+    code: '23503',
+    detail: 'Key (submission_id)=(dc9fbd1c-b3df-44a7-84ba-c76f74152af3) is not present in table "submissions".',
+    schema_name: 'public',
+    table_name: 'submission_resources',
+    constraint_name: 'submission_resources_submission_id_fkey',
+    file: 'ri_triggers.c',
+    line: '2599',
+    routine: 'ri_ReportViolation',
+    query: 'insert into "submission_resources" ("id", "submission_id", "type", "label", "url", "filename", "filesize", "display_order", "created_at") values (default, $1, $2, $3, $4, $5, $6, $7, default)',
+    parameters: [
+      'dc9fbd1c-b3df-44a7-84ba-c76f74152af3',
+      'github',
+      'Source Code',
+      'https://github.com/sinchana-P/eye-desk',
+      null,
+      null,
+      '0'
+    ],
+    args: [
+      'dc9fbd1c-b3df-44a7-84ba-c76f74152af3',
+      'github',
+      'Source Code',
+      'https://github.com/sinchana-P/eye-desk',
+      null,
+      null,
+      0
+    ],
+    types: [
+      2950, 25, 25,
+        25, 25, 23,
+        23
+    ]
+  }
+}
+Error stack: Error: Failed query: insert into "submission_resources" ("id", "submission_id", "type", "label", "url", "filename", "filesize", "display_order", "created_at") values (default, $1, $2, $3, $4, $5, $6, $7, default)
+params: dc9fbd1c-b3df-44a7-84ba-c76f74152af3,github,Source Code,https://github.com/sinchana-P/eye-desk,,,0
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async submitTaskAssignment (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/submissionController.ts:149:7)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:929:5)
+Error message: Failed query: insert into "submission_resources" ("id", "submission_id", "type", "label", "url", "filename", "filesize", "display_order", "created_at") values (default, $1, $2, $3, $4, $5, $6, $7, default)
+params: dc9fbd1c-b3df-44a7-84ba-c76f74152af3,github,Source Code,https://github.com/sinchana-P/eye-desk,,,0
+POST /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd/submit 500 in 2503ms
+CORS: GET /api/auth/me from origin: http://localhost:5173
+[AUTH] authenticateToken called for: GET /api/auth/me
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+[GET /api/auth/me] Getting current user: 35933f17-c02e-44fd-906a-67d69557f5c4
+[GET /api/auth/me] Get current user error: DrizzleQueryError: Failed query: select "id", "email", "name", "password", "role", "domain_role", "avatar_url", "is_active", "last_login_at", "created_at", "updated_at" from "users" where "users"."id" = $1 limit $2
+params: 35933f17-c02e-44fd-906a-67d69557f5c4,1
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:17)
+    at async DatabaseStorage.getUser (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/lib/storage.ts:119:20)
+    at async getCurrentUser (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/authController.ts:289:24)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:218:5) {
+  query: 'select "id", "email", "name", "password", "role", "domain_role", "avatar_url", "is_active", "last_login_at", "created_at", "updated_at" from "users" where "users"."id" = $1 limit $2',
+  params: [ '35933f17-c02e-44fd-906a-67d69557f5c4', 1 ],
+  cause: Error: getaddrinfo ENOTFOUND aws-1-ap-northeast-1.pooler.supabase.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at new Query (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/query.js:35:9)
+      at sql.unsafe (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/index.js:121:21)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:64:26)
+      at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:71:18)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:63:17)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:30)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at PostgresJsPreparedQuery.execute (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:39:17)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/query-builders/select.ts:1120:27) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'aws-1-ap-northeast-1.pooler.supabase.com',
+    query: undefined,
+    parameters: undefined,
+    args: [ '35933f17-c02e-44fd-906a-67d69557f5c4', 1 ],
+    types: null
+  }
+}
+GET /api/auth/me 500 in 68ms
+CORS: GET /api/auth/me from origin: http://localhost:5173
+[AUTH] authenticateToken called for: GET /api/auth/me
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+[GET /api/auth/me] Getting current user: 35933f17-c02e-44fd-906a-67d69557f5c4
+[GET /api/auth/me] Get current user error: DrizzleQueryError: Failed query: select "id", "email", "name", "password", "role", "domain_role", "avatar_url", "is_active", "last_login_at", "created_at", "updated_at" from "users" where "users"."id" = $1 limit $2
+params: 35933f17-c02e-44fd-906a-67d69557f5c4,1
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:17)
+    at async DatabaseStorage.getUser (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/lib/storage.ts:119:20)
+    at async getCurrentUser (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/authController.ts:289:24)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:218:5) {
+  query: 'select "id", "email", "name", "password", "role", "domain_role", "avatar_url", "is_active", "last_login_at", "created_at", "updated_at" from "users" where "users"."id" = $1 limit $2',
+  params: [ '35933f17-c02e-44fd-906a-67d69557f5c4', 1 ],
+  cause: Error: getaddrinfo ENOTFOUND aws-1-ap-northeast-1.pooler.supabase.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at new Query (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/query.js:35:9)
+      at sql.unsafe (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/index.js:121:21)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:64:26)
+      at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:71:18)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:63:17)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:30)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at PostgresJsPreparedQuery.execute (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:39:17)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/query-builders/select.ts:1120:27) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'aws-1-ap-northeast-1.pooler.supabase.com',
+    query: undefined,
+    parameters: undefined,
+    args: [ '35933f17-c02e-44fd-906a-67d69557f5c4', 1 ],
+    types: null
+  }
+}
+GET /api/auth/me 500 in 13ms
+CORS: GET /api/auth/me from origin: http://localhost:5173
+[AUTH] authenticateToken called for: GET /api/auth/me
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+[GET /api/auth/me] Getting current user: 35933f17-c02e-44fd-906a-67d69557f5c4
+[GET /api/auth/me] Get current user error: DrizzleQueryError: Failed query: select "id", "email", "name", "password", "role", "domain_role", "avatar_url", "is_active", "last_login_at", "created_at", "updated_at" from "users" where "users"."id" = $1 limit $2
+params: 35933f17-c02e-44fd-906a-67d69557f5c4,1
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:17)
+    at async DatabaseStorage.getUser (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/lib/storage.ts:119:20)
+    at async getCurrentUser (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/authController.ts:289:24)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:218:5) {
+  query: 'select "id", "email", "name", "password", "role", "domain_role", "avatar_url", "is_active", "last_login_at", "created_at", "updated_at" from "users" where "users"."id" = $1 limit $2',
+  params: [ '35933f17-c02e-44fd-906a-67d69557f5c4', 1 ],
+  cause: Error: getaddrinfo ENOTFOUND aws-1-ap-northeast-1.pooler.supabase.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at new Query (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/query.js:35:9)
+      at sql.unsafe (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/index.js:121:21)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:64:26)
+      at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:71:18)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:63:17)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:30)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at PostgresJsPreparedQuery.execute (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:39:17)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/query-builders/select.ts:1120:27) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'aws-1-ap-northeast-1.pooler.supabase.com',
+    query: undefined,
+    parameters: undefined,
+    args: [ '35933f17-c02e-44fd-906a-67d69557f5c4', 1 ],
+    types: null
+  }
+}
+GET /api/auth/me 500 in 11ms
+CORS: GET /api/auth/me from origin: http://localhost:5173
+[AUTH] authenticateToken called for: GET /api/auth/me
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+CORS: GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd from origin: http://localhost:5173
+[AUTH] authenticateToken called for: GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+[GET /api/auth/me] Getting current user: 35933f17-c02e-44fd-906a-67d69557f5c4
+CORS: GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd/submissions from origin: http://localhost:5173
+[AUTH] authenticateToken called for: GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd/submissions
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+Error fetching task assignment: DrizzleQueryError: Failed query: select "task_assignments"."id", "task_assignments"."buddy_id", "task_assignments"."task_template_id", "task_assignments"."buddy_curriculum_id", "task_assignments"."buddy_week_progress_id", "task_assignments"."assigned_at", "task_assignments"."due_date", "task_assignments"."status", "task_assignments"."started_at", "task_assignments"."first_submission_at", "task_assignments"."completed_at", "task_assignments"."submission_count", "task_assignments"."created_at", "task_assignments"."updated_at", "task_templates"."id", "task_templates"."curriculum_week_id", "task_templates"."title", "task_templates"."description", "task_templates"."requirements", "task_templates"."difficulty", "task_templates"."estimated_hours", "task_templates"."expected_resource_types", "task_templates"."resources", "task_templates"."display_order", "task_templates"."created_by", "task_templates"."last_modified_by", "task_templates"."is_active", "task_templates"."created_at", "task_templates"."updated_at" from "task_assignments" left join "task_templates" on "task_assignments"."task_template_id" = "task_templates"."id" where "task_assignments"."id" = $1 limit $2
+params: 14f0d8e8-8f6a-41e7-9afc-d99af94f98dd,1
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:17)
+    at async getTaskAssignmentById (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/submissionController.ts:191:24)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:909:5) {
+  query: 'select "task_assignments"."id", "task_assignments"."buddy_id", "task_assignments"."task_template_id", "task_assignments"."buddy_curriculum_id", "task_assignments"."buddy_week_progress_id", "task_assignments"."assigned_at", "task_assignments"."due_date", "task_assignments"."status", "task_assignments"."started_at", "task_assignments"."first_submission_at", "task_assignments"."completed_at", "task_assignments"."submission_count", "task_assignments"."created_at", "task_assignments"."updated_at", "task_templates"."id", "task_templates"."curriculum_week_id", "task_templates"."title", "task_templates"."description", "task_templates"."requirements", "task_templates"."difficulty", "task_templates"."estimated_hours", "task_templates"."expected_resource_types", "task_templates"."resources", "task_templates"."display_order", "task_templates"."created_by", "task_templates"."last_modified_by", "task_templates"."is_active", "task_templates"."created_at", "task_templates"."updated_at" from "task_assignments" left join "task_templates" on "task_assignments"."task_template_id" = "task_templates"."id" where "task_assignments"."id" = $1 limit $2',
+  params: [ '14f0d8e8-8f6a-41e7-9afc-d99af94f98dd', 1 ],
+  cause: Error: getaddrinfo ENOTFOUND aws-1-ap-northeast-1.pooler.supabase.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at new Query (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/query.js:35:9)
+      at sql.unsafe (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/index.js:121:21)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:64:26)
+      at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:71:18)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:63:17)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:30)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at PostgresJsPreparedQuery.execute (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:39:17)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/query-builders/select.ts:1120:27) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'aws-1-ap-northeast-1.pooler.supabase.com',
+    query: undefined,
+    parameters: undefined,
+    args: [ '14f0d8e8-8f6a-41e7-9afc-d99af94f98dd', 1 ],
+    types: null
+  }
+}
+GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd 500 in 61ms
+Error fetching task assignment submissions: DrizzleQueryError: Failed query: select "id", "task_assignment_id", "buddy_id", "version", "description", "notes", "review_status", "reviewed_by", "reviewed_at", "grade", "submitted_at", "created_at", "updated_at" from "new_submissions" where "new_submissions"."task_assignment_id" = $1 order by "new_submissions"."version" desc
+params: 14f0d8e8-8f6a-41e7-9afc-d99af94f98dd
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:17)
+    at async getTaskAssignmentSubmissions (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/submissionController.ts:224:25)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:939:5) {
+  query: 'select "id", "task_assignment_id", "buddy_id", "version", "description", "notes", "review_status", "reviewed_by", "reviewed_at", "grade", "submitted_at", "created_at", "updated_at" from "new_submissions" where "new_submissions"."task_assignment_id" = $1 order by "new_submissions"."version" desc',
+  params: [ '14f0d8e8-8f6a-41e7-9afc-d99af94f98dd' ],
+  cause: Error: getaddrinfo ENOTFOUND aws-1-ap-northeast-1.pooler.supabase.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at new Query (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/query.js:35:9)
+      at sql.unsafe (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/index.js:121:21)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:64:26)
+      at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:71:18)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:63:17)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:30)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at PostgresJsPreparedQuery.execute (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:39:17)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/query-builders/select.ts:1120:27) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'aws-1-ap-northeast-1.pooler.supabase.com',
+    query: undefined,
+    parameters: undefined,
+    args: [ '14f0d8e8-8f6a-41e7-9afc-d99af94f98dd' ],
+    types: null
+  }
+}
+GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd/submissions 500 in 51ms
+[GET /api/auth/me] Get current user error: DrizzleQueryError: Failed query: select "id", "email", "name", "password", "role", "domain_role", "avatar_url", "is_active", "last_login_at", "created_at", "updated_at" from "users" where "users"."id" = $1 limit $2
+params: 35933f17-c02e-44fd-906a-67d69557f5c4,1
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:17)
+    at async DatabaseStorage.getUser (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/lib/storage.ts:119:20)
+    at async getCurrentUser (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/authController.ts:289:24)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:218:5) {
+  query: 'select "id", "email", "name", "password", "role", "domain_role", "avatar_url", "is_active", "last_login_at", "created_at", "updated_at" from "users" where "users"."id" = $1 limit $2',
+  params: [ '35933f17-c02e-44fd-906a-67d69557f5c4', 1 ],
+  cause: Error: getaddrinfo ENOTFOUND aws-1-ap-northeast-1.pooler.supabase.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at new Query (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/query.js:35:9)
+      at sql.unsafe (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/index.js:121:21)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:64:26)
+      at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:71:18)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:63:17)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:30)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at PostgresJsPreparedQuery.execute (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:39:17)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/query-builders/select.ts:1120:27) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'aws-1-ap-northeast-1.pooler.supabase.com',
+    query: undefined,
+    parameters: undefined,
+    args: [ '35933f17-c02e-44fd-906a-67d69557f5c4', 1 ],
+    types: null
+  }
+}
+GET /api/auth/me 500 in 100ms
+CORS: GET /api/auth/me from origin: http://localhost:5173
+[AUTH] authenticateToken called for: GET /api/auth/me
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+[GET /api/auth/me] Getting current user: 35933f17-c02e-44fd-906a-67d69557f5c4
+[GET /api/auth/me] Get current user error: DrizzleQueryError: Failed query: select "id", "email", "name", "password", "role", "domain_role", "avatar_url", "is_active", "last_login_at", "created_at", "updated_at" from "users" where "users"."id" = $1 limit $2
+params: 35933f17-c02e-44fd-906a-67d69557f5c4,1
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:17)
+    at async DatabaseStorage.getUser (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/lib/storage.ts:119:20)
+    at async getCurrentUser (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/authController.ts:289:24)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:218:5) {
+  query: 'select "id", "email", "name", "password", "role", "domain_role", "avatar_url", "is_active", "last_login_at", "created_at", "updated_at" from "users" where "users"."id" = $1 limit $2',
+  params: [ '35933f17-c02e-44fd-906a-67d69557f5c4', 1 ],
+  cause: Error: getaddrinfo ENOTFOUND aws-1-ap-northeast-1.pooler.supabase.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at new Query (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/query.js:35:9)
+      at sql.unsafe (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/index.js:121:21)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:64:26)
+      at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:71:18)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:63:17)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:30)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at PostgresJsPreparedQuery.execute (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:39:17)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/query-builders/select.ts:1120:27) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'aws-1-ap-northeast-1.pooler.supabase.com',
+    query: undefined,
+    parameters: undefined,
+    args: [ '35933f17-c02e-44fd-906a-67d69557f5c4', 1 ],
+    types: null
+  }
+}
+GET /api/auth/me 500 in 9ms
+CORS: GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd from origin: http://localhost:5173
+[AUTH] authenticateToken called for: GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+CORS: GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd/submissions from origin: http://localhost:5173
+[AUTH] authenticateToken called for: GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd/submissions
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+Error fetching task assignment: DrizzleQueryError: Failed query: select "task_assignments"."id", "task_assignments"."buddy_id", "task_assignments"."task_template_id", "task_assignments"."buddy_curriculum_id", "task_assignments"."buddy_week_progress_id", "task_assignments"."assigned_at", "task_assignments"."due_date", "task_assignments"."status", "task_assignments"."started_at", "task_assignments"."first_submission_at", "task_assignments"."completed_at", "task_assignments"."submission_count", "task_assignments"."created_at", "task_assignments"."updated_at", "task_templates"."id", "task_templates"."curriculum_week_id", "task_templates"."title", "task_templates"."description", "task_templates"."requirements", "task_templates"."difficulty", "task_templates"."estimated_hours", "task_templates"."expected_resource_types", "task_templates"."resources", "task_templates"."display_order", "task_templates"."created_by", "task_templates"."last_modified_by", "task_templates"."is_active", "task_templates"."created_at", "task_templates"."updated_at" from "task_assignments" left join "task_templates" on "task_assignments"."task_template_id" = "task_templates"."id" where "task_assignments"."id" = $1 limit $2
+params: 14f0d8e8-8f6a-41e7-9afc-d99af94f98dd,1
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:17)
+    at async getTaskAssignmentById (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/submissionController.ts:191:24)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:909:5) {
+  query: 'select "task_assignments"."id", "task_assignments"."buddy_id", "task_assignments"."task_template_id", "task_assignments"."buddy_curriculum_id", "task_assignments"."buddy_week_progress_id", "task_assignments"."assigned_at", "task_assignments"."due_date", "task_assignments"."status", "task_assignments"."started_at", "task_assignments"."first_submission_at", "task_assignments"."completed_at", "task_assignments"."submission_count", "task_assignments"."created_at", "task_assignments"."updated_at", "task_templates"."id", "task_templates"."curriculum_week_id", "task_templates"."title", "task_templates"."description", "task_templates"."requirements", "task_templates"."difficulty", "task_templates"."estimated_hours", "task_templates"."expected_resource_types", "task_templates"."resources", "task_templates"."display_order", "task_templates"."created_by", "task_templates"."last_modified_by", "task_templates"."is_active", "task_templates"."created_at", "task_templates"."updated_at" from "task_assignments" left join "task_templates" on "task_assignments"."task_template_id" = "task_templates"."id" where "task_assignments"."id" = $1 limit $2',
+  params: [ '14f0d8e8-8f6a-41e7-9afc-d99af94f98dd', 1 ],
+  cause: Error: getaddrinfo ENOTFOUND aws-1-ap-northeast-1.pooler.supabase.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at new Query (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/query.js:35:9)
+      at sql.unsafe (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/index.js:121:21)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:64:26)
+      at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:71:18)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:63:17)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:30)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at PostgresJsPreparedQuery.execute (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:39:17)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/query-builders/select.ts:1120:27) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'aws-1-ap-northeast-1.pooler.supabase.com',
+    query: undefined,
+    parameters: undefined,
+    args: [ '14f0d8e8-8f6a-41e7-9afc-d99af94f98dd', 1 ],
+    types: null
+  }
+}
+GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd 500 in 12ms
+Error fetching task assignment submissions: DrizzleQueryError: Failed query: select "id", "task_assignment_id", "buddy_id", "version", "description", "notes", "review_status", "reviewed_by", "reviewed_at", "grade", "submitted_at", "created_at", "updated_at" from "new_submissions" where "new_submissions"."task_assignment_id" = $1 order by "new_submissions"."version" desc
+params: 14f0d8e8-8f6a-41e7-9afc-d99af94f98dd
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:17)
+    at async getTaskAssignmentSubmissions (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/submissionController.ts:224:25)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:939:5) {
+  query: 'select "id", "task_assignment_id", "buddy_id", "version", "description", "notes", "review_status", "reviewed_by", "reviewed_at", "grade", "submitted_at", "created_at", "updated_at" from "new_submissions" where "new_submissions"."task_assignment_id" = $1 order by "new_submissions"."version" desc',
+  params: [ '14f0d8e8-8f6a-41e7-9afc-d99af94f98dd' ],
+  cause: Error: getaddrinfo ENOTFOUND aws-1-ap-northeast-1.pooler.supabase.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at new Query (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/query.js:35:9)
+      at sql.unsafe (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/index.js:121:21)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:64:26)
+      at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:71:18)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:63:17)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:30)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at PostgresJsPreparedQuery.execute (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:39:17)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/query-builders/select.ts:1120:27) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'aws-1-ap-northeast-1.pooler.supabase.com',
+    query: undefined,
+    parameters: undefined,
+    args: [ '14f0d8e8-8f6a-41e7-9afc-d99af94f98dd' ],
+    types: null
+  }
+}
+GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd/submissions 500 in 13ms
+CORS: GET /api/auth/me from origin: http://localhost:5173
+[AUTH] authenticateToken called for: GET /api/auth/me
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+[GET /api/auth/me] Getting current user: 35933f17-c02e-44fd-906a-67d69557f5c4
+(node:98675) TimeoutNegativeWarning: -3542772.760703714 is a negative number.
+Timeout duration was set to 1.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[GET /api/auth/me] Get current user error: DrizzleQueryError: Failed query: select "id", "email", "name", "password", "role", "domain_role", "avatar_url", "is_active", "last_login_at", "created_at", "updated_at" from "users" where "users"."id" = $1 limit $2
+params: 35933f17-c02e-44fd-906a-67d69557f5c4,1
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:17)
+    at async DatabaseStorage.getUser (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/lib/storage.ts:119:20)
+    at async getCurrentUser (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/authController.ts:289:24)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:218:5) {
+  query: 'select "id", "email", "name", "password", "role", "domain_role", "avatar_url", "is_active", "last_login_at", "created_at", "updated_at" from "users" where "users"."id" = $1 limit $2',
+  params: [ '35933f17-c02e-44fd-906a-67d69557f5c4', 1 ],
+  cause: Error: getaddrinfo ENOTFOUND aws-1-ap-northeast-1.pooler.supabase.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at new Query (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/query.js:35:9)
+      at sql.unsafe (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/index.js:121:21)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:64:26)
+      at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:71:18)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:63:17)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:30)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at PostgresJsPreparedQuery.execute (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:39:17)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/query-builders/select.ts:1120:27) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'aws-1-ap-northeast-1.pooler.supabase.com',
+    query: undefined,
+    parameters: undefined,
+    args: [ '35933f17-c02e-44fd-906a-67d69557f5c4', 1 ],
+    types: null
+  }
+}
+GET /api/auth/me 500 in 15ms
+CORS: GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd from origin: http://localhost:5173
+[AUTH] authenticateToken called for: GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+Error fetching task assignment: DrizzleQueryError: Failed query: select "task_assignments"."id", "task_assignments"."buddy_id", "task_assignments"."task_template_id", "task_assignments"."buddy_curriculum_id", "task_assignments"."buddy_week_progress_id", "task_assignments"."assigned_at", "task_assignments"."due_date", "task_assignments"."status", "task_assignments"."started_at", "task_assignments"."first_submission_at", "task_assignments"."completed_at", "task_assignments"."submission_count", "task_assignments"."created_at", "task_assignments"."updated_at", "task_templates"."id", "task_templates"."curriculum_week_id", "task_templates"."title", "task_templates"."description", "task_templates"."requirements", "task_templates"."difficulty", "task_templates"."estimated_hours", "task_templates"."expected_resource_types", "task_templates"."resources", "task_templates"."display_order", "task_templates"."created_by", "task_templates"."last_modified_by", "task_templates"."is_active", "task_templates"."created_at", "task_templates"."updated_at" from "task_assignments" left join "task_templates" on "task_assignments"."task_template_id" = "task_templates"."id" where "task_assignments"."id" = $1 limit $2
+params: 14f0d8e8-8f6a-41e7-9afc-d99af94f98dd,1
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:17)
+    at async getTaskAssignmentById (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/submissionController.ts:191:24)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:909:5) {
+  query: 'select "task_assignments"."id", "task_assignments"."buddy_id", "task_assignments"."task_template_id", "task_assignments"."buddy_curriculum_id", "task_assignments"."buddy_week_progress_id", "task_assignments"."assigned_at", "task_assignments"."due_date", "task_assignments"."status", "task_assignments"."started_at", "task_assignments"."first_submission_at", "task_assignments"."completed_at", "task_assignments"."submission_count", "task_assignments"."created_at", "task_assignments"."updated_at", "task_templates"."id", "task_templates"."curriculum_week_id", "task_templates"."title", "task_templates"."description", "task_templates"."requirements", "task_templates"."difficulty", "task_templates"."estimated_hours", "task_templates"."expected_resource_types", "task_templates"."resources", "task_templates"."display_order", "task_templates"."created_by", "task_templates"."last_modified_by", "task_templates"."is_active", "task_templates"."created_at", "task_templates"."updated_at" from "task_assignments" left join "task_templates" on "task_assignments"."task_template_id" = "task_templates"."id" where "task_assignments"."id" = $1 limit $2',
+  params: [ '14f0d8e8-8f6a-41e7-9afc-d99af94f98dd', 1 ],
+  cause: Error: getaddrinfo ENOTFOUND aws-1-ap-northeast-1.pooler.supabase.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at new Query (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/query.js:35:9)
+      at sql.unsafe (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/index.js:121:21)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:64:26)
+      at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:71:18)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:63:17)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:30)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at PostgresJsPreparedQuery.execute (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:39:17)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/query-builders/select.ts:1120:27) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'aws-1-ap-northeast-1.pooler.supabase.com',
+    query: undefined,
+    parameters: undefined,
+    args: [ '14f0d8e8-8f6a-41e7-9afc-d99af94f98dd', 1 ],
+    types: null
+  }
+}
+GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd 500 in 7ms
+CORS: GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd/submissions from origin: http://localhost:5173
+[AUTH] authenticateToken called for: GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd/submissions
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+Error fetching task assignment submissions: DrizzleQueryError: Failed query: select "id", "task_assignment_id", "buddy_id", "version", "description", "notes", "review_status", "reviewed_by", "reviewed_at", "grade", "submitted_at", "created_at", "updated_at" from "new_submissions" where "new_submissions"."task_assignment_id" = $1 order by "new_submissions"."version" desc
+params: 14f0d8e8-8f6a-41e7-9afc-d99af94f98dd
+    at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:17)
+    at async getTaskAssignmentSubmissions (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/controllers/submissionController.ts:224:25)
+    at async <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/src/index.ts:939:5) {
+  query: 'select "id", "task_assignment_id", "buddy_id", "version", "description", "notes", "review_status", "reviewed_by", "reviewed_at", "grade", "submitted_at", "created_at", "updated_at" from "new_submissions" where "new_submissions"."task_assignment_id" = $1 order by "new_submissions"."version" desc',
+  params: [ '14f0d8e8-8f6a-41e7-9afc-d99af94f98dd' ],
+  cause: Error: getaddrinfo ENOTFOUND aws-1-ap-northeast-1.pooler.supabase.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at new Query (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/query.js:35:9)
+      at sql.unsafe (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/postgres/cjs/src/index.js:121:21)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:64:26)
+      at PostgresJsPreparedQuery.queryWithCache (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/session.ts:71:18)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:63:17)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:58:30)
+      at Object.startActiveSpan (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/tracing.ts:27:11)
+      at PostgresJsPreparedQuery.execute (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/postgres-js/session.ts:39:17)
+      at <anonymous> (/Users/sinchana/Personal/Mentor Buddy/mentor-buddy-backend/node_modules/src/pg-core/query-builders/select.ts:1120:27) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'aws-1-ap-northeast-1.pooler.supabase.com',
+    query: undefined,
+    parameters: undefined,
+    args: [ '14f0d8e8-8f6a-41e7-9afc-d99af94f98dd' ],
+    types: null
+  }
+}
+GET /api/task-assignments/14f0d8e8-8f6a-41e7-9afc-d99af94f98dd/submissions 500 in 8ms
+CORS: POST /api/auth/logout from origin: http://localhost:5173
+[AUTH] authenticateToken called for: POST /api/auth/logout
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token verified successfully for user: 35933f17-c02e-44fd-906a-67d69557f5c4 role: buddy
+[POST /api/auth/logout] Logout request
+Token blacklisted successfully
+[POST /api/auth/logout] Token blacklisted successfully
+POST /api/auth/logout 200 in 9ms
+CORS: GET /api/auth/me from origin: http://localhost:5173
+[AUTH] authenticateToken called for: GET /api/auth/me
+[AUTH] Auth header present: true
+[AUTH] Auth header value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzNTkzM2YxNy1jMDJlLTQ0ZmQtOTA2YS02N2Q2OTU1N2Y1YzQiLCJlbWFpbCI6InByaXlhLnNoYXJtYUBtZW50b3JidWRkeS5jb20iLCJyb2xlIjoiYnVkZHkiLCJkb21haW5Sb2xlIjoiYmFja2VuZCIsInBlcm1pc3Npb25zIjpbImNhbl92aWV3X293bl9wcm9maWxlIiwiY2FuX2VkaXRfYnVkZHlfbmFtZSIsImNhbl91cGRhdGVfdGFza19zdGF0dXMiLCJjYW5fdmlld190YXNrcyIsImNhbl91cGRhdGVfb3duX3Byb2dyZXNzIiwiY2FuX3ZpZXdfcHJvZ3Jlc3MiLCJjYW5fY3JlYXRlX293bl9wb3J0Zm9saW8iLCJjYW5fZWRpdF9vd25fcG9ydGZvbGlvIiwiY2FuX2RlbGV0ZV9vd25fcG9ydGZvbGlvIiwiY2FuX3ZpZXdfcG9ydGZvbGlvcyIsImNhbl92aWV3X3Jlc291cmNlcyIsImNhbl92aWV3X3RvcGljcyIsImNhbl92aWV3X2Rhc2hib2FyZCJdLCJpYXQiOjE3NjM5MDEzNTEsImV4cCI6MTc2NDUwNjE1MX0.Vx-rcPptiMlGz6-WaQRpMGR64uV-pVz6bFvN4fuZZq8
+[AUTH] Token present: true
+[AUTH] Token is blacklisted
+GET /api/auth/me 401 in 0ms

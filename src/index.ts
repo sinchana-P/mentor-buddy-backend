@@ -253,6 +253,16 @@ app.get("/api/users", authenticateToken, requireManager, async (req, res, next) 
   }
 });
 
+app.post("/api/users", authenticateToken, requireManager, async (req, res, next) => {
+  try {
+    const { createUser } = await import("./controllers/userController.ts");
+    await createUser(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Create user route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 app.get("/api/users/:id", authenticateToken, requireBuddy, async (req, res, next) => {
   try {
     const { getUserById } = await import("./controllers/userController.ts");
@@ -269,6 +279,16 @@ app.put("/api/users/:id", authenticateToken, requireManager, async (req, res, ne
     await updateUser(req, res, next);
   } catch (error) {
     console.error('[ERROR] Update user route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.patch("/api/users/:id", authenticateToken, requireManager, async (req, res, next) => {
+  try {
+    const { updateUser } = await import("./controllers/userController.ts");
+    await updateUser(req, res, next);
+  } catch (error) {
+    console.error('[ERROR] Patch user route error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -1045,6 +1065,16 @@ app.get("/api/mentors/:id/review-queue", authenticateToken, requireMentor, async
     await getMentorReviewQueue(req, res, next);
   } catch (error) {
     console.error('[ERROR] Get mentor review queue route error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get("/api/mentors/:id/assigned-buddies", authenticateToken, requireMentor, async (req, res) => {
+  try {
+    const { getMentorAssignedBuddies } = await import("./controllers/submissionController.ts");
+    await getMentorAssignedBuddies(req, res);
+  } catch (error) {
+    console.error('[ERROR] Get mentor assigned buddies route error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

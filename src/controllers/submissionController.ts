@@ -8,11 +8,24 @@ import {
   buddyWeekProgress,
   buddyCurriculums,
   taskTemplates,
+  buddies,
+  users,
+  curriculumWeeks,
   insertNewSubmissionSchema,
   insertSubmissionResourceSchema,
   insertSubmissionFeedbackSchema,
 } from '../shared/schema.js';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, desc, sql, inArray } from 'drizzle-orm';
+
+// Helper function to get buddyId from userId
+async function getBuddyIdFromUserId(userId: string): Promise<string | null> {
+  const buddy = await db
+    .select({ id: buddies.id })
+    .from(buddies)
+    .where(eq(buddies.userId, userId))
+    .limit(1);
+  return buddy.length > 0 ? buddy[0].id : null;
+}
 
 // ═══════════════════════════════════════════════════════════
 // TASK ASSIGNMENT ACTIONS
@@ -25,7 +38,8 @@ import { eq, and, desc, sql } from 'drizzle-orm';
 export async function startTaskAssignment(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const buddyId = (req as any).user?.buddyId;
+    const userId = (req as any).user?.userId;
+    const userRole = (req as any).user?.role;
 
     // Verify ownership
     const assignment = await db
@@ -38,7 +52,18 @@ export async function startTaskAssignment(req: Request, res: Response) {
       return res.status(404).json({ error: 'Task assignment not found' });
     }
 
-    if (assignment[0].buddyId !== buddyId && (req as any).user?.role !== 'manager' && (req as any).user?.role !== 'mentor') {
+    // Get buddyId from userId for buddy users
+    let isAuthorized = false;
+    if (userRole === 'manager' || userRole === 'mentor') {
+      isAuthorized = true;
+    } else if (userRole === 'buddy') {
+      const buddyId = await getBuddyIdFromUserId(userId);
+      if (buddyId && assignment[0].buddyId === buddyId) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
       return res.status(403).json({ error: 'Not authorized to modify this assignment' });
     }
 
@@ -68,7 +93,7 @@ export async function submitTaskAssignment(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const { description, notes, resources } = req.body;
-    const buddyId = (req as any).user?.buddyId;
+    const userId = (req as any).user?.userId;
 
     if (!description) {
       return res.status(400).json({ error: 'Description is required' });
@@ -76,6 +101,12 @@ export async function submitTaskAssignment(req: Request, res: Response) {
 
     if (!resources || !Array.isArray(resources) || resources.length === 0) {
       return res.status(400).json({ error: 'At least one resource is required' });
+    }
+
+    // Get buddyId from userId
+    const buddyId = await getBuddyIdFromUserId(userId);
+    if (!buddyId) {
+      return res.status(403).json({ error: 'User is not a buddy' });
     }
 
     // Verify ownership
@@ -143,9 +174,11 @@ export async function submitTaskAssignment(req: Request, res: Response) {
     const completeSubmission = await getSubmissionWithDetails(submission[0].id);
 
     res.status(201).json(completeSubmission);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error submitting task assignment:', error);
-    res.status(500).json({ error: 'Failed to submit task assignment' });
+    console.error('Error stack:', error.stack);
+    console.error('Error message:', error.message);
+    res.status(500).json({ error: 'Failed to submit task assignment', details: error.message });
   }
 }
 
@@ -244,7 +277,10 @@ export async function updateSubmission(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const { description, notes } = req.body;
-    const buddyId = (req as any).user?.buddyId;
+    const userId = (req as any).user?.userId;
+
+    // Get buddyId from userId
+    const buddyId = await getBuddyIdFromUserId(userId);
 
     const submission = await db
       .select()
@@ -256,7 +292,7 @@ export async function updateSubmission(req: Request, res: Response) {
       return res.status(404).json({ error: 'Submission not found' });
     }
 
-    if (submission[0].buddyId !== buddyId) {
+    if (!buddyId || submission[0].buddyId !== buddyId) {
       return res.status(403).json({ error: 'Not authorized to update this submission' });
     }
 
@@ -288,7 +324,11 @@ export async function updateSubmission(req: Request, res: Response) {
 export async function deleteSubmission(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const buddyId = (req as any).user?.buddyId;
+    const userId = (req as any).user?.userId;
+    const userRole = (req as any).user?.role;
+
+    // Get buddyId from userId
+    const buddyId = await getBuddyIdFromUserId(userId);
 
     const submission = await db
       .select()
@@ -300,7 +340,8 @@ export async function deleteSubmission(req: Request, res: Response) {
       return res.status(404).json({ error: 'Submission not found' });
     }
 
-    if (submission[0].buddyId !== buddyId && (req as any).user?.role !== 'manager') {
+    const isOwner = buddyId && submission[0].buddyId === buddyId;
+    if (!isOwner && userRole !== 'manager') {
       return res.status(403).json({ error: 'Not authorized to delete this submission' });
     }
 
@@ -664,48 +705,153 @@ export async function deleteFeedback(req: Request, res: Response) {
 /**
  * Get mentor's review queue
  * GET /api/mentors/:id/review-queue
+ * Query params: ?buddyId=xxx&weekNumber=xxx&status=pending|under_review|all
  */
 export async function getMentorReviewQueue(req: Request, res: Response) {
   try {
     const { id } = req.params;
+    const { buddyId: filterBuddyId, weekNumber, status } = req.query;
 
-    // Get all submissions for buddies assigned to this mentor
+    // Validate mentor ID
+    if (!id || id === 'undefined' || id === 'null') {
+      return res.json([]);
+    }
+
+    // Build status filter
+    let statusFilter = sql`${newSubmissions.reviewStatus} IN ('pending', 'under_review')`;
+    if (status === 'all') {
+      statusFilter = sql`1=1`; // Show all statuses
+    } else if (status === 'pending') {
+      statusFilter = sql`${newSubmissions.reviewStatus} = 'pending'`;
+    } else if (status === 'under_review') {
+      statusFilter = sql`${newSubmissions.reviewStatus} = 'under_review'`;
+    }
+
+    // Build buddy filter
+    let buddyFilter = sql`${taskAssignments.buddyId} IN (
+      SELECT id FROM buddies WHERE assigned_mentor_id = ${id}
+    )`;
+    if (filterBuddyId) {
+      buddyFilter = sql`${taskAssignments.buddyId} = ${filterBuddyId} AND ${taskAssignments.buddyId} IN (
+        SELECT id FROM buddies WHERE assigned_mentor_id = ${id}
+      )`;
+    }
+
+    // Get all submissions for buddies assigned to this mentor with full details
     const submissions = await db
       .select({
         submission: newSubmissions,
         assignment: taskAssignments,
         taskTemplate: taskTemplates,
+        weekProgress: buddyWeekProgress,
+        week: curriculumWeeks,
+        buddy: buddies,
       })
       .from(newSubmissions)
       .innerJoin(taskAssignments, eq(newSubmissions.taskAssignmentId, taskAssignments.id))
       .innerJoin(taskTemplates, eq(taskAssignments.taskTemplateId, taskTemplates.id))
-      .where(
-        and(
-          sql`${taskAssignments.buddyId} IN (
-            SELECT id FROM buddies WHERE assigned_mentor_id = ${id}
-          )`,
-          sql`${newSubmissions.reviewStatus} IN ('pending', 'under_review')`
-        )
-      )
-      .orderBy(newSubmissions.submittedAt);
+      .innerJoin(buddyWeekProgress, eq(taskAssignments.buddyWeekProgressId, buddyWeekProgress.id))
+      .innerJoin(curriculumWeeks, eq(buddyWeekProgress.curriculumWeekId, curriculumWeeks.id))
+      .innerJoin(buddies, eq(taskAssignments.buddyId, buddies.id))
+      .where(and(buddyFilter, statusFilter))
+      .orderBy(desc(newSubmissions.submittedAt));
 
-    // Get resources for each submission
-    const submissionsWithResources = await Promise.all(
-      submissions.map(async (item) => {
+    // Filter by week number if specified
+    let filteredSubmissions = submissions;
+    if (weekNumber) {
+      const weekNum = parseInt(weekNumber as string);
+      filteredSubmissions = submissions.filter(s => s.weekProgress.weekNumber === weekNum);
+    }
+
+    // Get unique buddy IDs to fetch user details
+    const buddyIds = [...new Set(filteredSubmissions.map(s => s.buddy.userId))];
+
+    // Fetch user details for all buddies
+    const userDetails = buddyIds.length > 0 ? await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        avatarUrl: users.avatarUrl,
+      })
+      .from(users)
+      .where(inArray(users.id, buddyIds)) : [];
+
+    // Create a map for quick lookup
+    const userMap = new Map(userDetails.map(u => [u.id, u]));
+
+    // Get resources for each submission and attach buddy details
+    const submissionsWithDetails = await Promise.all(
+      filteredSubmissions.map(async (item) => {
         const resources = await db
           .select()
           .from(submissionResources)
           .where(eq(submissionResources.submissionId, item.submission.id))
           .orderBy(submissionResources.displayOrder);
 
-        return { ...item, resources };
+        const buddyUser = userMap.get(item.buddy.userId);
+
+        return {
+          ...item,
+          resources,
+          buddyDetails: {
+            id: item.buddy.id,
+            name: buddyUser?.name || 'Unknown',
+            email: buddyUser?.email || '',
+            avatarUrl: buddyUser?.avatarUrl || null,
+            status: item.buddy.status,
+          },
+          weekInfo: {
+            weekNumber: item.weekProgress.weekNumber,
+            weekTitle: item.week.title,
+            weekDescription: item.week.description,
+          },
+        };
       })
     );
 
-    res.json(submissionsWithResources);
+    res.json(submissionsWithDetails);
   } catch (error) {
     console.error('Error fetching mentor review queue:', error);
     res.status(500).json({ error: 'Failed to fetch review queue' });
+  }
+}
+
+/**
+ * Get all buddies assigned to a mentor (for filter dropdown)
+ * GET /api/mentors/:id/assigned-buddies
+ */
+export async function getMentorAssignedBuddies(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+
+    const assignedBuddies = await db
+      .select({
+        buddy: buddies,
+        user: {
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          avatarUrl: users.avatarUrl,
+        },
+      })
+      .from(buddies)
+      .innerJoin(users, eq(buddies.userId, users.id))
+      .where(eq(buddies.assignedMentorId, id));
+
+    const result = assignedBuddies.map(b => ({
+      id: b.buddy.id,
+      name: b.user.name,
+      email: b.user.email,
+      avatarUrl: b.user.avatarUrl,
+      status: b.buddy.status,
+      joinDate: b.buddy.joinDate,
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching mentor assigned buddies:', error);
+    res.status(500).json({ error: 'Failed to fetch assigned buddies' });
   }
 }
 

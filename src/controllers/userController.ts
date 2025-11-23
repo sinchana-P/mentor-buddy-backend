@@ -64,14 +64,18 @@ export const createUser = async (req: Request, res: Response) => {
     const userData: InsertUser = {
       email: validatedData.email,
       name: validatedData.name,
+      password: validatedData.password,
       role: validatedData.role,
       domainRole: validatedData.domainRole,
       avatarUrl: validatedData.avatarUrl
     };
-    
+
     const user = await storage.createUser(userData);
     console.log('[POST /api/users] User created successfully:', user);
-    res.status(201).json(user);
+
+    // Remove password from response for security
+    const { password: _, ...userWithoutPassword } = user;
+    res.status(201).json(userWithoutPassword);
   } catch (error: any) {
     console.error('[POST /api/users] Error:', error);
     
@@ -112,7 +116,10 @@ export const updateUser = async (req: Request, res: Response) => {
     
     const user = await storage.updateUser(id, userData);
     console.log(`[PUT /api/users/${id}] User updated successfully:`, user);
-    res.json(user);
+
+    // Remove password from response for security
+    const { password: _, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
   } catch (error: any) {
     console.error(`[PUT /api/users/${req.params.id}] Error:`, error);
     
