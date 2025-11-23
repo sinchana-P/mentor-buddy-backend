@@ -646,27 +646,36 @@ export class DatabaseStorage implements IStorage {
       mentors.forEach(m => mentorMap.set(m.id, m));
     }
 
-    // Get task stats for each buddy
+    // Get task stats for each buddy from taskAssignments table (same as detail page)
     let taskStats: any[] = [];
     if (buddyIds.length > 0) {
       taskStats = await db.select({
-        buddyId: schema.tasks.buddyId,
+        buddyId: schema.taskAssignments.buddyId,
         total: sql<number>`count(*)`,
-        completed: sql<number>`count(*) filter (where ${schema.tasks.status} = 'completed')`
+        completed: sql<number>`count(*) filter (where ${schema.taskAssignments.status} = 'completed')`
       })
-      .from(schema.tasks)
-      .where(inArray(schema.tasks.buddyId, buddyIds))
-      .groupBy(schema.tasks.buddyId);
+      .from(schema.taskAssignments)
+      .where(inArray(schema.taskAssignments.buddyId, buddyIds))
+      .groupBy(schema.taskAssignments.buddyId);
     }
 
-    return buddies.map(buddy => ({
-      ...buddy,
-      mentor: buddy.assignedMentorId ? mentorMap.get(buddy.assignedMentorId) || null : null,
-      stats: {
-        totalTasks: taskStats.find(ts => ts.buddyId === buddy.id)?.total || 0,
-        completedTasks: taskStats.find(ts => ts.buddyId === buddy.id)?.completed || 0
-      }
-    }));
+    return buddies.map(buddy => {
+      const stats = taskStats.find(ts => ts.buddyId === buddy.id);
+      // Convert string counts to numbers
+      const totalTasks = stats?.total ? Number(stats.total) : 0;
+      const completedTasks = stats?.completed ? Number(stats.completed) : 0;
+      const calculatedProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+      return {
+        ...buddy,
+        mentor: buddy.assignedMentorId ? mentorMap.get(buddy.assignedMentorId) || null : null,
+        progress: calculatedProgress, // Always use calculated progress from task assignments
+        stats: {
+          totalTasks,
+          completedTasks
+        }
+      };
+    });
   }
 
   async createBuddy(buddy: InsertBuddy): Promise<Buddy> {
