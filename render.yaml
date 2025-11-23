@@ -22,7 +22,7 @@ services:
   - type: cron
     name: mentor-buddy-keepalive
     env: docker
-    schedule: "*/14 * * * *"
+    schedule: "0 0 * * *"
     dockerfilePath: ./Dockerfile.keepalive
     envVars:
       - key: BACKEND_URL
