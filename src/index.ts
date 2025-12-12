@@ -1,5 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger.js";
 
 // Load environment variables
 dotenv.config();
@@ -91,12 +93,25 @@ app.use((req, res, next) => {
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
-  res.json({ 
-    status: "healthy", 
+  res.json({
+    status: "healthy",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     version: "1.0.0"
   });
+});
+
+// Swagger API Documentation
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: "Mentor Buddy API Documentation",
+  customfavIcon: "/favicon.ico"
+}));
+
+// Swagger JSON endpoint
+app.get("/api-docs.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpec);
 });
 
 // Test endpoint to check if logging works
